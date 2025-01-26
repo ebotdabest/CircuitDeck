@@ -25,4 +25,4 @@ Welcome to **CircuitDeck**, a project where you can simulate virtualized compute
 - **Python** - Backend
 
 ---
-Created by: **Külföldi Kolonizálók Közössége**
+Created by: **Külföldi Kolonizálók Közössége** for **Dusza Árpád Emlékverseny**
