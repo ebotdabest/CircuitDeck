@@ -6,12 +6,12 @@
     <title>WebCards</title>
     <meta name="description" content="A project to make cards.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ get_serverside_file('css', 'style.css') }}">
   </head>
   <body>
     <div class="container">
       <div class="card">
-        <h2>Card 1</h2>
+        <h2>Card 69</h2>
         <p>Drag me!</p>
       </div>
       <div class="card">
@@ -60,6 +60,6 @@
         </div>
       </div>
     </div>
-    <script src="scipts.js" defer></script>
+    <script src="{{ get_serverside_file('scripts', 'scripts.js') }}" defer></script>
   </body>
 </html>
