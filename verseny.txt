@@ -1,0 +1,91 @@
+**Regionális Kör Feladatösszefoglaló**
+
+**Feladat Leírása:**
+
+- Fejlessz egy alkalmazást, amely képes kezelni a folyamatokat egy szimulált számítógép-kluszteren.
+- A klasztert mappák (számítógépek) és fájlok (folyamatok) képviselik. Minden számítógép rendelkezik egy konfigurációs fájllal (.szamitogep_konfig), amely leírja az erőforrásait (CPU és memória), illetve minden folyamatfájl tartalmazza az indulási időt, az állapotot (ACTIVE/INACTIVE) és az erőforrás-használat részleteit.
+
+**Az alkalmazásnak a következőket kell teljesítenie:**
+
+- Felügyelni és kezelni a klaszter folyamatait.
+- Biztosítani, hogy minden programból a kívánt példányszám fusson.
+- Megelőzni az erőforrások túlhasználatát bármelyik számítógépen.
+- Kezelni a klaszter dinamikus változásait (pl. számítógépek hozzáadása/eltávolítása, folyamatok indítása/leállítása).
+
+**Fő Jellemzők:**
+
+- **Klaszter Kezelés:**
+  - Számítógépek hozzáadása/eltávolítása.
+  - Folyamatok indítása/leállítása.
+  - Programkövetelmények módosítása (pl. példányszám, erőforrás-használat).
+
+- **Monitorozás:**
+  - Megjeleníteni a klaszter aktuális állapotát (számítógépek, erőforrás-használat, futó folyamatok).
+  - Ellenőrizni, hogy a klaszter a kívánt állapotban van-e, és jelezni az eltéréseket.
+
+- **Fájlrendszeri Műveletek:**
+  - Fájl- és mappaműveletek végrehajtása (létrehozás, törlés, listázás) a klaszter kezeléséhez.
+
+**Műszaki Követelmények:**
+
+- Az alkalmazásnak kezelnie kell a megadott bemeneti/kimeneti fájlokat.
+- Könnyen lefordíthatónak és futtathatónak kell lennie, abszolút elérési útvonalak nélkül a kódban.
+- Tartalmazzon egy readme.txt fájlt a program fordítási és futtatási utasításaival.
+
+**Értékelési Szempontok:**
+
+- **Funkcionalitás:** Az alkalmazásnak minden funkcionális követelményt teljesítenie kell.
+- **Kód Minősége:** Bár ez nem a legfőbb szempont, a kódnak stabilnak és működőképesnek kell lennie.
+- **Felhasználói Felület:** A programnak könnyen használhatónak és tesztelhetőnek kell lennie.
+
+---
+
+**Végső Kör Feladatösszefoglaló**
+
+**Feladat Leírása:**
+
+- Termékbe alakítani a regionális kör alkalmazását, javítva a felhasználói élményt, a vizuális megjelenést és a professzionalizmust.
+- Az alkalmazásnak továbbra is meg kell felelnie a regionális kör összes funkcionális követelményének, de most már kifinomultabbnak és felhasználóbarátabbnak kell lennie.
+
+**Fő Fókuszterületek:**
+
+- **Felhasználói Élmény (UX):**
+  - Újratervezni a felhasználói felületet, hogy intuitívabb és vizuálisan vonzóbb legyen.
+
+- **Dokumentáció:**
+  - Biztosítani a felhasználói dokumentációt utasításokkal, képernyőképekkel és példákkal.
+  - Biztosítani a fejlesztői dokumentációt, amely részletezi az alkalmazás struktúráját, az alkalmazott technológiákat és a beállítási utasításokat.
+
+- **Prezentáció:**
+  - Készíts egy professzionális bemutatót az alkalmazásról (10 perc), amely tartalmazza:
+    - Az alkalmazás működésének ismertetése.
+    - A fejlesztési folyamat, a használt eszközök és az esetleges kihívások áttekintése.
+    - A megoldásban rejlő hozzáadott érték és kreativitás bemutatása.
+  - Előnyben részesítjük az élő bemutatót, de elfogadhatóak képernyőképek vagy előre felvett videók is.
+
+**Fejlesztési Folyamat:**
+
+- Használj GitHub-ot a verziókezeléshez, és oszd meg a repó linkjét a zsűrivel.
+- Dolgozz csapatban, alkalmazz projektmenedzsment eszközöket (pl. Trello), és kövesd a strukturált fejlesztési folyamatot (pl. kódfelülvizsgálatok, határidők betartása).
+- Tanulj új technológiákat vagy könyvtárakat, ha szükséges az alkalmazás javítása érdekében.
+
+**Beküldés és Prezentáció:**
+
+- **Határidő:** 2025. február 21., 23:59.
+- **Mit kell beküldeni:**
+  - A végleges dokumentáció (felhasználói és fejlesztői dokumentáció).
+  - A futtatható program és a forráskód.
+  - A prezentációs anyagok (pl. diák, demo videók).
+
+- **Prezentáció:**
+  - 10 perces élő bemutató vagy prezentáció, amit egy 5 perces kérdezz-felelek követ.
+  - A prezentációhoz a saját számítógéped használata szükséges.
+
+**Értékelési Szempontok:**
+
+- A végső pontszám kiszámítása: 60% a regionális kör pontszámából + 40% a végső kör pontszámából.
+- **Végső kör pontozási lebontása:**
+  - Dokumentáció és kódminőség: 24 pont.
+  - Prezentáció és csapat teljesítménye: 16 pont.
+  - Javulás a regionális körhöz képest: 28 pont.
+  - Kérdések megválaszolása és a zsűrivel folytatott professzionális beszélgetés: 12 pont.
