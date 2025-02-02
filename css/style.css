@@ -39,6 +39,7 @@
   border-radius: 5%;
   outline: solid 2px black;
   z-index: 5;
+  cursor: pointer;
 }
 
 .items-pc {
@@ -49,6 +50,9 @@
   height: 60%;
   padding-top: 5px;
   padding-left: 5px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .items-app {
@@ -61,6 +65,10 @@
   padding-top: 5px;
   padding-left: 5px;
   margin-top: 10px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 10px;
 }
 
 .card, .duplicateable-pc {
@@ -105,83 +113,162 @@
 }
 
 .node {
-  display: flex;
-  align-content: center;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  grid-template-rows: repeat(3, auto);
+  gap: 5px;
+  align-items: center;
   position: absolute;
   cursor: move;
   background-color: burlywood;
   padding: 5px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: min-content;
+  min-width: 300px;
   height: min-content;
   user-select: none;
-  padding-top: 5px;
-  padding-left: 5px;
+  padding: 5px;
   z-index: 2;
 }
 
 .node h2 {
-  flex: 1;
-  width: 150px;
-  font-size: 30px;
-  margin-left: 5px;
+  grid-column: 4 / 5;
+  grid-row: 1;
+  font-size: 25px;
+  margin: 0;
+  align-self: end;
   background-color: burlywood;
-  margin-top: 7px;
 } 
-.node p {
-  flex: 1;
-  font-size: 40px;
+.node img {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  height: 60px;
+  width: 60px;
+  background-color: burlywood;
+  margin-bottom: 5px;
+}
+
+.node .cpu {
+  font-size: 15px;
+  grid-column: 1 / 4;
+  grid-row: 3;
+  margin: 0;
+  background-color: burlywood;
+  margin-bottom: 5px;
+}
+
+.node .memory {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  font-size: 15px;
+  margin: 0;
   background-color: burlywood;
 }
-.node button {
-  flex: 1;
-  width: 50px;
-  height: 50px;
-  margin-left: 25px;
+
+.node .settings {
+  font-size: 20px;
+  grid-column: 5;
+  grid-row: 3;
   background-color: bisque;
+  padding: 8px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .duplicateable-app {
-  display: flex;
-  align-content: center;
-  justify-content: center;
-  position: relative;
-  cursor: move;
-  background-color: burlywood;
-  padding: 5px;
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  grid-template-rows: repeat(3, auto);
+  gap: 5px;
+  align-items: center;
   border-radius: 10px;
+  background-color: burlywood;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: min-content;
-  min-width: 300px;
+  cursor: move;
+  position: relative;
   height: min-content;
-  user-select: none;
-  padding-top: 5px;
-  padding-left: 5px;
-  z-index: 2;
+  min-width: 300px;
   outline: solid 2px black;
-  margin-left: 5px;
-  margin-top: 5px;
+  margin: 10px;
+  padding: 5px;
+  user-select: none;
+}
+
+.duplicateable-app img {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  height: 60px;
+  width: 60px;
+  background-color: burlywood;
+  margin-bottom: 5px;
 }
 
 .duplicateable-app h2 {
-  flex: 1;
-  width: 150px;
-  font-size: 30px;
-  margin-left: 5px;
-  background-color: burlywood;
-  margin-top: 7px;
-} 
-.duplicateable-app p {
-  flex: 1;
-  font-size: 40px;
+  grid-column: 4 / 5;
+  grid-row: 1;
+  font-size: 25px;
+  margin: 0;
+  align-self: end;
   background-color: burlywood;
 }
-.duplicateable-app button {
-  flex: 1;
-  width: 50px;
-  height: 50px;
-  margin-left: 25px;
+
+.duplicateable-app .memory {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  font-size: 15px;
+  margin: 0;
+  background-color: burlywood;
+}
+
+.duplicateable-app .cpu {
+  font-size: 15px;
+  grid-column: 1 / 4;
+  grid-row: 3;
+  margin: 0;
+  background-color: burlywood;
+  margin-bottom: 5px;
+} 
+
+.duplicateable-app .settings {
+  font-size: 20px;
+  grid-column: 5;
+  grid-row: 3;
   background-color: bisque;
+  padding: 8px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#button-pc {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  position: absolute;
+  left: 5%;
+  top: 52%;
+  width: 10vw;
+  height: 5vh;
+  background-color: burlywood;
+  padding: 5px;
+  border-radius: 10px;
+  outline: solid 2px black;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  font-size: 30px;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.duplicateable-app:hover, .node:hover, .duplicateable-pc:hover, .card:hover, #menu-button:hover, #button-pc:hover, .settings:hover {
+  outline: solid 2px rgb(255, 255, 255);
 }
