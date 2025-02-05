@@ -20,7 +20,7 @@
         <button>Sample button</button>
       </div>
       <div class="node">
-        <img src="../content/google_logo.png" alt="Glogo">
+        <img src="{{ get_serverside_file('content', 'google_logo.png') }}" alt="Glogo">
         <h2>Google</h2>
         <p class="memory">Memory used:</p>
         <p class="cpu">CPU used:</p>
@@ -52,14 +52,14 @@
       </div>
       <div class="items-app">
         <div class="duplicateable-app">
-          <img src="../content/google_logo.png" alt="VSCodelogo">
+          <img src="{{ get_serverside_file('content', 'google_logo.png') }}" alt="VSCodelogo">
           <h2>Google</h2>
           <p class="memory">Memory used:</p>
           <p class="cpu">CPU used:</p>
           <button class="settings">⚙️</button>
         </div>
         <div class="duplicateable-app">
-          <img src="../content/vscode_logo.png" alt="VSCodelogo">
+          <img src="{{ get_serverside_file('content', 'vscode_logo.png') }}" alt="VSCodelogo">
           <h2>VS Code</h2>
           <p class="memory">Memory used:</p>
           <p class="cpu">CPU used:</p>

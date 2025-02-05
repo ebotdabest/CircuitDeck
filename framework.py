@@ -8,11 +8,30 @@ import re
 def http_route(path):
     def wrapper(func):
         CustomHandler.ADD_ROUTE(path, func)
-        print("Registered!")
 
     return wrapper
 
-def get_serverside_file(path, filename):
+IMG_FILETYPES = ["png"]
+class ImgContent:
+    def __init__(self, content):
+        self.__content = content
+
+    @property
+    def content(self):
+        return self.__content
+
+def do_img_render(path, filename):
+    def inner_response_maker():
+        with open(f"{path}/{filename}", "rb") as f:
+            return ImgContent(f.read())
+
+    CustomHandler.ADD_ROUTE(f"/{path}/{filename}", inner_response_maker)
+    return f"/{path}/{filename}"
+
+def get_serverside_file(path, filename: str):
+    for tpe in IMG_FILETYPES:
+        if filename.endswith(tpe):
+            return do_img_render(path, filename)
     def inner_response_maker():
         with open(f"{path}/{filename}", encoding="utf-8") as f:
             return f.read()
@@ -41,7 +60,8 @@ class WebpageContent:
         return self.content
 
 
-def render_webpage(file, **kwargs):
+
+def render_webpage(file: str, **kwargs):
     with open(f"html/{file}", encoding="utf-8") as f:
         content = f.read()
 
@@ -62,7 +82,6 @@ def render_webpage(file, **kwargs):
                 content = content.replace("{{ <chr> }}".replace("<chr>", call_full), res)
 
         return WebpageContent(content)
-
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     ROUTES = {}
@@ -85,10 +104,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", f"text/{fe}")
         self.end_headers()
 
-
+    def img_response(self, status=HTTPStatus.OK, fe="png"):
+        self.send_response(status)
+        self.send_header("Content-Type", f"image/{fe}")
+        self.end_headers()
 
     def add_to_output(self, content):
         self.wfile.write(content.encode("utf-8"))
+
 
     def do_GET(self):
         if self.path in self.ROUTES:
@@ -98,6 +121,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             elif type(content) == str:
                 self.plain_response(fe=self.path.rsplit(".")[1])
+            elif isinstance(content, ImgContent):
+                self.img_response(fe=self.path.rsplit(".")[1])
+                self.wfile.write(content.content)
+                return
 
             self.add_to_output(str(content))
         else:
