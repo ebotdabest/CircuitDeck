@@ -1,7 +1,10 @@
+import base64
+import hashlib
 import http.server
 import socketserver
 from typing import Tuple
 from http import HTTPStatus
+import json
 
 import re
 
@@ -10,6 +13,8 @@ def http_route(path):
         CustomHandler.ADD_ROUTE(path, func)
 
     return wrapper
+
+WS_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 IMG_FILETYPES = ["png"]
 class ImgContent:
@@ -42,10 +47,13 @@ def get_serverside_file(path, filename: str):
 def log(content):
     print(content)
 
+def add_signals(*args):
+    return f"<script src=\"{get_serverside_file('scripts', 'signals.js')}\" defer></script>"
 
 FUNCS = [
     get_serverside_file,
-    log
+    log,
+    add_signals
 ]
 
 class WebpageContent:
@@ -83,8 +91,20 @@ def render_webpage(file: str, **kwargs):
 
         return WebpageContent(content)
 
+class JsonContent:
+    def __init__(self, content):
+        self.__content = content
+
+    def __str__(self):
+        return json.dumps(self.__content)
+
+def json_response(content):
+    return JsonContent(content)
+
+
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     ROUTES = {}
+    CLIENT = None
 
     def __init__(self, request: bytes, client_address: Tuple[str, int], server: socketserver.BaseServer):
         super().__init__(request, client_address, server)
@@ -112,8 +132,31 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def add_to_output(self, content):
         self.wfile.write(content.encode("utf-8"))
 
+    def websocket_keepalive(self):
+        while True:
+            data = type(self).CLIENT.recv(1024)
+            if not data:
+                break
+
+            send_to_client("Keep")
+
 
     def do_GET(self):
+        if "Upgrade" in self.headers and self.headers["Upgrade"].lower() == "websocket":
+            key = self.headers.get("Sec-WebSocket-Key", "")
+            response_key = base64.b64encode(hashlib.sha1((key + WS_MAGIC_STRING).encode()).digest()).decode()
+
+            self.send_response(101)
+            self.send_header("Upgrade", "websocket")
+            self.send_header("Connection", "Upgrade")
+            self.send_header("Sec-WebSocket-Accept", response_key)
+            self.end_headers()
+
+            type(self).CLIENT = self.request
+
+            self.websocket_keepalive()
+            return
+
         if self.path in self.ROUTES:
             content = self.ROUTES[self.path]()
             if isinstance(content, WebpageContent):
@@ -125,7 +168,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.img_response(fe=self.path.rsplit(".")[1])
                 self.wfile.write(content.content)
                 return
-
+            elif isinstance(content, JsonContent):
+                self.json_response()
             self.add_to_output(str(content))
         else:
             self.content_response()
@@ -137,6 +181,22 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         cls.ROUTES[path] = func
+
+def send_to_client(content):
+    if not CustomHandler.CLIENT:
+        return
+
+    msg = content.encode("utf-8")
+    length = len(msg)
+
+    if length < 126:
+        header = bytes([129, length])
+    elif length < 65536:
+        header = bytes([129, 126]) + length.to_bytes(2, "big")
+    else:
+        header = bytes([129, 127]) + length.to_bytes(8, "big")
+
+    CustomHandler.CLIENT.send(header + msg)
 
 def start_server(addr, port):
     my_server = socketserver.ThreadingTCPServer((addr, port), CustomHandler)
