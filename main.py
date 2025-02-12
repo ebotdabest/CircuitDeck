@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional
 import webbrowser, os, sys, string
 import random as r
 from datetime import datetime as dt
+import json
 
 BASEDIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "kalszterek")
 
@@ -209,29 +210,28 @@ def load_root_config():
 
 load_root_config()
 
-
 # [[ HTTP SECTION ]]
 
 ADDRESS = "localhost"
 PORT = 8080
 
 @http_route("/")
-def index():
+def index(args):
     return render_webpage("index.html")
 
 @http_route("/get_ws_address")
-def ws_address():
+def ws_address(args):
     return json_response({"address": f"{ADDRESS}:{PORT}"})
 
+@http_route("/api/refresh_computers")
+def rc(args):
+    print("Doing refresh!")
+    for c in Computer.COMPUTERS:
+        print("Sending!")
+        send_to_client(json.dumps({"type": "addComputer", "name": c.name, "proc": c.max_proc, "mem": c.max_mem}))
 
-@http_route("/connect")
-def connect_test():
-    return render_webpage("connect_test.html")
+    return json_response({"response": True})
 
-@http_route("/msg")
-def msg():
-    send_to_client("sup")
-    return json_response({"hi": "asd"})
 
 # webbrowser.open("http://localhost:8080")
 start_server(ADDRESS, PORT)

@@ -1,16 +1,64 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>WebCards</title>
-    <meta name="description" content="A project to make cards.">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ get_serverside_file('css', 'style.css') }}">
+    <meta name="description" content="A project to make cards." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="{{ get_serverside_file('css', 'style.css') }}"
+    />
   </head>
   <body>
-    <div class="container">
-      <div class="card">
+    {{ add_signals() }}
+
+    <script type="module" defer>
+      import { send_to_server } from "/scripts/signals.js";
+
+      document.body.addEventListener("serverOpen", () => {
+        send_to_server("/api/refresh_computers", {}, () => {});
+      });
+
+      document.body.addEventListener("serverMessage", (e) => {
+        const command = JSON.parse(e.detail.message);
+        switch (command.type) {
+          case "addComputer":
+            const clone = document.querySelector("#copy").cloneNode(true);
+            document.querySelectorAll(".container")[0].appendChild(clone);
+
+            for (const e of clone.children) {
+              const name = e.getAttribute("name");
+              if (name === "name") {
+                e.innerText = command.name;
+              } else if (name === "proc") {
+                e.innerText = `Processor: ${command.proc}`;
+              } else if (name === "mem") {
+                e.innerText = `Memory: ${command.mem}`;
+              }
+            }
+            clone.hidden = false;
+            makeCards();
+            makeNodes();
+            break;
+        }
+      });
+    </script>
+    <div id="workspaces-wrap">
+      <button type="button" id="remove-workspace">Delete</button>
+      <div id="workspaces">
+        <button type="button" id="workspace 1">Workspace-1</button>
+      </div>
+      <button type="button" id="add-workspace">+</button>
+    </div>
+    <div hidden class="card" id="copy">
+      <h2 name="name">Card 69</h2>
+      <p name="proc">Drag me!</p>
+      <p name="mem">Drag me!</p>
+    </div>
+    <div class="container 1">
+      <!-- <div class="card">
         <h2>Card 69</h2>
         <p>Drag me!</p>
       </div>
@@ -25,7 +73,7 @@
         <p class="memory">Memory used:</p>
         <p class="cpu">CPU used:</p>
         <button class="settings">⚙️</button>
-      </div>
+      </div> -->
     </div>
     <div class="menu">
       <button id="menu-button">◀</button>
@@ -52,14 +100,20 @@
       </div>
       <div class="items-app">
         <div class="duplicateable-app">
-          <img src="{{ get_serverside_file('content', 'google_logo.png') }}" alt="VSCodelogo">
+          <img
+            src="{{ get_serverside_file('content', 'google_logo.png') }}"
+            alt="VSCodelogo"
+          />
           <h2>Google</h2>
           <p class="memory">Memory used:</p>
           <p class="cpu">CPU used:</p>
           <button class="settings">⚙️</button>
         </div>
         <div class="duplicateable-app">
-          <img src="{{ get_serverside_file('content', 'vscode_logo.png') }}" alt="VSCodelogo">
+          <img
+            src="{{ get_serverside_file('content', 'vscode_logo.png') }}"
+            alt="VSCodelogo"
+          />
           <h2>VS Code</h2>
           <p class="memory">Memory used:</p>
           <p class="cpu">CPU used:</p>
@@ -67,6 +121,24 @@
         </div>
       </div>
     </div>
-    <script src="{{ get_serverside_file('scripts', 'scripts.js') }}" defer></script>
+    <div id="delete-box">
+      <img
+        src="{{ get_serverside_file('content', 'trashcan.png') }}"
+        alt="Trashcan"
+      />
+    </div>
+    <div id="pc-create-ui">
+      <h2>Create PC</h2>
+      <p>Name</p>
+      <input type="text" name="pcname" id="pc-name" />
+      <p>Memory: <span id="memory-value">1</span></p>
+      <input type="range" min="1" max="131072" id="memory-slider" />
+      <p>Cores: <span id="cores-value">2</span></p>
+      <input type="range" min="2" max="96" step="2" id="cores-slider" />
+    </div>
+    <script
+      src="{{ get_serverside_file('scripts', 'scripts.js') }}"
+      defer
+    ></script>
   </body>
 </html>

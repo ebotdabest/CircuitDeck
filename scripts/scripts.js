@@ -5,29 +5,12 @@ class DragableCard {
       this.isDragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
-      this.debugElement = null;
 
-      this.createDebugElement();
       this.initEvents();
       console.log('DragableCard inited for:', this.card);
     } catch (error) {
       console.error('Error in initing:', error);
     }
-  }
-
-  createDebugElement() {
-    this.debugElement = document.createElement('div');
-    this.debugElement.className = 'debug-overlay';
-    document.body.appendChild(this.debugElement);
-  }
-
-  updateDebugInfo() {
-    if (!this.debugElement) return;
-    this.debugElement.textContent = [
-      'Dragging:', this.isDragging,
-      'Position:', this.card.style.left, this.card.style.top,
-      'Offset:', this.offsetX.toFixed(1), this.offsetY.toFixed(1),
-    ].join('\n');
   }
 
   initEvents() {
@@ -54,7 +37,6 @@ class DragableCard {
       this.offsetX = clientX - rect.left;
       this.offsetY = clientY - rect.top;
       console.log('Drag started:', {clientX, clientY, rect});
-      this.updateDebugInfo();
       if (e.touches) e.preventDefault();
     } catch (error) {
       console.error('Error in startDragging:', error);
@@ -70,7 +52,6 @@ class DragableCard {
       const y = clientY - this.offsetY;
       this.card.style.left = x + "px";
       this.card.style.top = y + "px";
-      this.updateDebugInfo();
       if (e.touches) e.preventDefault();
     } catch (error) {
       console.error('Error in drag:', error);
@@ -82,7 +63,6 @@ class DragableCard {
       this.isDragging = false;
       this.card.style.zIndex = 1;
       console.log('Drag stopped');
-      this.updateDebugInfo();
     } catch (error) {
       console.error('Error in stopDragging:', error);
     }
@@ -96,29 +76,12 @@ class DragableNode {
       this.isDragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
-      this.debugElement = null;
 
-      this.createDebugElement();
       this.initEvents();
       console.log('DragableNode inited for:', this.node);
     } catch (error) {
       console.error('Error in initing:', error);
     }
-  }
-
-  createDebugElement() {
-    this.debugElement = document.createElement('div');
-    this.debugElement.className = 'debug-overlay';
-    document.body.appendChild(this.debugElement);
-  }
-
-  updateDebugInfo() {
-    if (!this.debugElement) return;
-    this.debugElement.textContent = [
-      'Dragging:', this.isDragging,
-      'Position:', this.node.style.left, this.node.style.top,
-      'Offset:', this.offsetX.toFixed(1), this.offsetY.toFixed(1),
-    ].join('\n');
   }
 
   initEvents() {
@@ -145,7 +108,6 @@ class DragableNode {
       this.offsetX = clientX - rect.left;
       this.offsetY = clientY - rect.top;
       console.log('Drag started:', {clientX, clientY, rect});
-      this.updateDebugInfo();
       if (e.touches) e.preventDefault();
     } catch (error) {
       console.error('Error in startDragging:', error);
@@ -161,7 +123,6 @@ class DragableNode {
       const y = clientY - this.offsetY;
       this.node.style.left = x + "px";
       this.node.style.top = y + "px";
-      this.updateDebugInfo();
       if (e.touches) e.preventDefault();
     } catch (error) {
       console.error('Error in drag:', error);
@@ -173,7 +134,6 @@ class DragableNode {
       this.isDragging = false;
       this.node.style.zIndex = 2;
       console.log('Drag stopped');
-      this.updateDebugInfo();
     } catch (error) {
       console.error('Error in stopDragging:', error);
     }
@@ -250,4 +210,120 @@ document.addEventListener('click', function(e) {
     document.querySelector('.container').appendChild(clone);
     makeNodes();
   }
+});
+
+const deleteBox = document.getElementById('delete-box');
+let deleteTimers = new Map();
+
+function isCenteredOver(element1, element2) {
+  const rect1 = element1.getBoundingClientRect();
+  const rect2 = element2.getBoundingClientRect();
+  
+  const centerX = rect2.left + rect2.width / 2;
+  const centerY = rect2.top + rect2.height / 2;
+
+  return (
+    centerX > rect1.left &&
+    centerX < rect1.right &&
+    centerY > rect1.top &&
+    centerY < rect1.bottom
+  );
+}
+
+function startDeleteTimer(element) {
+  if (!deleteTimers.has(element) && !element.isDragging)  {
+    element.style.outline = '2px solid red';
+    const timer = setTimeout(() => {
+      element.remove();
+      deleteTimers.delete(element);
+    }, 1500);
+    deleteTimers.set(element, timer);
+  }
+}
+
+function stopDeleteTimer(element) {
+  if (deleteTimers.has(element)) {
+    clearTimeout(deleteTimers.get(element));
+    deleteTimers.delete(element);
+    element.style.outline = '';
+  }
+}
+
+function checkAndDelete() {
+  const cards = document.querySelectorAll('.card');
+  const nodes = document.querySelectorAll('.node');
+  cards.forEach(card => {
+    if (isCenteredOver(deleteBox, card)) {
+      startDeleteTimer(card);
+    } else {
+      stopDeleteTimer(card);
+    }
+  });
+  nodes.forEach(node => {
+    if (isCenteredOver(deleteBox, node)) {
+      startDeleteTimer(node);
+    } else {
+      stopDeleteTimer(node);
+    }
+  });
+}
+
+document.addEventListener('mousemove', checkAndDelete);
+
+const memorySlider = document.getElementById('memory-slider');
+const memoryValue = document.getElementById('memory-value');
+
+const coresSlider = document.getElementById('cores-slider');
+const coresValue = document.getElementById('cores-value');
+
+function updateMemory() {
+  memoryValue.textContent = memorySlider.value + "MB";
+}
+
+function updateCores() {
+  coresValue.textContent = coresSlider.value + "db";
+}
+
+memorySlider.addEventListener('input', updateMemory);
+coresSlider.addEventListener('input', updateCores);
+
+updateMemory();
+updateCores();
+
+const pcButton = document.getElementById('button-pc');
+
+pcButton.addEventListener('click', function() {
+  const pcUI = document.getElementById('pc-create-ui');
+  
+  if (pcUI.style.visibility === 'hidden' || pcUI.style.visibility === '') {
+    pcUI.style.visibility = 'visible';
+  } else {
+    pcUI.style.visibility = 'hidden';
+  }
+});
+
+const addWorkspaceButton = document.getElementById("add-workspace")
+
+function numofWorkspaces(workspaces) {
+  const workspacesAmount = workspaces.length
+  return workspacesAmount
+}
+
+function makeWorkspaces(newWorkspace, newButton) {
+  const workspaces = document.querySelectorAll(".container")
+  const workspacesAmount = numofWorkspaces(workspaces)
+  newWorkspace.classList.add('container')
+  newWorkspace.classList.add(workspacesAmount + 1)
+  newButton.classList.add('workspace')
+  newButton.classList.add(workspacesAmount + 1)
+  newButton.textContent = `Workspace-${workspacesAmount + 1}`;
+}
+
+addWorkspaceButton.addEventListener('click', function() {
+  const newWorkspace = document.createElement('div')
+  const newButton = document.createElement('button')
+  const workspaces = document.getElementById('workspaces')
+  makeWorkspaces(newWorkspace, newButton)
+  document.body.appendChild(newWorkspace);
+  workspaces.appendChild(newButton)
 });

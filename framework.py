@@ -4,7 +4,7 @@ import http.server
 import socketserver
 from typing import Tuple
 from http import HTTPStatus
-import json
+import json, base64
 
 import re
 
@@ -26,7 +26,7 @@ class ImgContent:
         return self.__content
 
 def do_img_render(path, filename):
-    def inner_response_maker():
+    def inner_response_maker(args):
         with open(f"{path}/{filename}", "rb") as f:
             return ImgContent(f.read())
 
@@ -37,7 +37,7 @@ def get_serverside_file(path, filename: str):
     for tpe in IMG_FILETYPES:
         if filename.endswith(tpe):
             return do_img_render(path, filename)
-    def inner_response_maker():
+    def inner_response_maker(args):
         with open(f"{path}/{filename}", encoding="utf-8") as f:
             return f.read()
 
@@ -48,7 +48,7 @@ def log(content):
     print(content)
 
 def add_signals(*args):
-    return f"<script src=\"{get_serverside_file('scripts', 'signals.js')}\" defer></script>"
+    return f"<script type=\"module\" src=\"{get_serverside_file('scripts', 'signals.js')}\" defer></script>"
 
 FUNCS = [
     get_serverside_file,
@@ -78,7 +78,7 @@ def render_webpage(file: str, **kwargs):
 
         for func in FUNCS:
             func_name = func.__name__
-            finds = re.findall("((\{){2}\ ŁŁ\((.)+\ (\}){2})+".replace("ŁŁ", func_name), content, re.MULTILINE)
+            finds = re.findall(r"((\{){2}\ ŁŁ\((.)+\ (\}){2})+".replace("ŁŁ", func_name), content, re.MULTILINE)
             for find in finds:
                 call_full: str = find[0][3:-3]
                 call = call_full.replace(func_name, "").replace("(", "").replace(")", "")
@@ -119,9 +119,19 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
 
-    def plain_response(self, status = HTTPStatus.OK, fe = "plain"):
+    def plain_response(self, status=HTTPStatus.OK, fe="plain"):
+        mime_types = {
+            "js": "application/javascript",
+            "mjs": "application/javascript",
+            "html": "text/html",
+            "css": "text/css",
+            "json": "application/json",
+            "txt": "text/plain"
+        }
+
+        mime_type = mime_types.get(fe, "text/plain")  # Default to text/plain if unknown
         self.send_response(status)
-        self.send_header("Content-Type", f"text/{fe}")
+        self.send_header("Content-Type", mime_type)
         self.end_headers()
 
     def img_response(self, status=HTTPStatus.OK, fe="png"):
@@ -140,6 +150,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             send_to_client("Keep")
 
+    @staticmethod
+    def parse_path(path):
+        sp = path.split("?")
+        if len(sp) >= 2:
+            path, args = sp[0], sp[1].split("&")
+        else:
+            path, args = sp[0], []
+
+        args_formatted = {}
+        for a in args:
+            k, v, *_ = a.split("=", 1)
+            args_formatted[k] = v
+        
+        return path, args_formatted
+
 
     def do_GET(self):
         if "Upgrade" in self.headers and self.headers["Upgrade"].lower() == "websocket":
@@ -156,9 +181,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             self.websocket_keepalive()
             return
-
-        if self.path in self.ROUTES:
-            content = self.ROUTES[self.path]()
+        
+        path, args = type(self).parse_path(self.path)
+        args = {k: base64.b64decode(v).decode("utf-8") for k, v in args.items()}
+        if path in self.ROUTES:
+            content = self.ROUTES[path](args)
             if isinstance(content, WebpageContent):
                 self.content_response()
 

@@ -6,6 +6,10 @@
   font-weight: 400;
 }
 
+body {
+  padding: 0;
+}
+
 .container {
   position: relative;
   width: 100vw;
@@ -271,4 +275,72 @@
 
 .duplicateable-app:hover, .node:hover, .duplicateable-pc:hover, .card:hover, #menu-button:hover, #button-pc:hover, .settings:hover {
   outline: solid 2px rgb(255, 255, 255);
+}
+
+#workspaces-wrap {
+  width: 85vw;
+  height: min-content;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(77, 54, 43);
+  z-index: -1;
+  margin: 0;
+}
+
+#workspaces{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: static;
+  width: min-content;
+  height: 5vh;
+  z-index: 10;
+  -webkit-overflow-scrolling: touch;
+  background-color: rgb(77, 54, 43);
+}
+
+#delete-box {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background: bisque;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  outline: solid 2px burlywood;
+  width: 250px;
+  height: 250px;
+}
+
+#delete-box img{
+  width: 75%;
+  height: 75%;
+  background: bisque;
+  user-select: none;
+}
+
+#pc-create-ui {
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  background: burlywood;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  outline: solid 2px rgb(77, 54, 43);
+  width: 250px;
+  height: 250px;
+  visibility: hidden;
+  transition: 0.3 ease-in-out;
+  z-index: 10;
+}
+
+#pc-create-ui h2, #pc-create-ui p, #pc-create-ui span{
+  background-color: burlywood;
 }
