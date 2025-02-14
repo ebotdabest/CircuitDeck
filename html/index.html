@@ -16,6 +16,8 @@
 
     <script type="module" defer>
       import { send_to_server } from "/scripts/signals.js";
+      import { makeCards } from "/scripts/scripts.js";
+      import { makeNodes } from "/scripts/scripts.js";
 
       document.body.addEventListener("serverOpen", () => {
         send_to_server("/api/refresh_computers", {}, () => {});
@@ -42,18 +44,20 @@
             makeNodes();
             break;
           case "registerProcess":
-            const clone2 = document.querySelector("#copy-process").cloneNode(true);
+            const clone2 = document
+              .querySelector("#copy-process")
+              .cloneNode(true);
             document.querySelectorAll(".items-app")[0].appendChild(clone2);
-            clone2.classList.add("duplicateable-app")
+            clone2.classList.add("duplicateable-app");
             clone2.hidden = false;
             for (const e of clone2.children) {
               const name = e.getAttribute("name");
               if (name === "name") {
                 e.innerText = command.name;
-              }else if (name === "mem") {
+              } else if (name === "mem") {
                 e.innerText = command.mem;
-              }else if (name === "proc") {
-                e.innerText = command.proc
+              } else if (name === "proc") {
+                e.innerText = command.proc;
               }
             }
             break;
@@ -61,9 +65,17 @@
       });
     </script>
     <div id="workspaces-wrap">
+      <div id="workspace-create-ui">
+        <h2>Create workspace</h2>
+        <form id="workspace-form">
+          <p>Name</p>
+          <input type="text" name="workspace-name" id="workspace-name" />
+          <button type="submit" id="workspace-create-button">Create</button>
+        </form>
+      </div>
       <button type="button" id="remove-workspace">Delete</button>
       <div id="workspaces">
-        <button type="button" id="workspace 1">Workspace-1</button>
+        <button type="button" class="workspace" id="Base">Base</button>
       </div>
       <button type="button" id="add-workspace">+</button>
     </div>
@@ -71,16 +83,18 @@
       <h2 name="name">Card 69</h2>
       <p name="proc">Drag me!</p>
       <p name="mem">Drag me!</p>
-    </div>
-    <div hidden id="copy-process">
-      <img
-        src="{{ get_serverside_file('content', 'google_logo.png') }}"
-        alt="VSCodelogo"
-      />
-      <h2 name="name">Google</h2>
-      <p class="memory" name="mem">Memory used:</p>
-      <p class="cpu" name="proc">CPU used:</p>
-      <button class="settings">⚙️</button>
+      <div id="process-holder">
+        <div hidden id="copy-process">
+          <img
+            src="{{ get_serverside_file('content', 'google_logo.png') }}"
+            alt="VSCodelogo"
+          />
+          <h2 name="name">Google</h2>
+          <p class="memory" name="mem">Memory used:</p>
+          <p class="cpu" name="proc">CPU used:</p>
+          <button class="settings">⚙️</button>
+        </div>
+      </div>
     </div>
 
     <div class="container 1">
@@ -88,7 +102,7 @@
         <h2 name="name">Card 69</h2>
         <p name="proc">Drag me!</p>
         <p name="mem">Drag me!</p>
-        <div>
+        <div id="process-holder">
           <div id="copy-process" class="node2 inside">
             <img
               src="{{ get_serverside_file('content', 'google_logo.png') }}"
@@ -125,9 +139,7 @@
           <button>Sample button</button>
         </div>
       </div>
-      <div class="items-app">
-
-      </div>
+      <div class="items-app"></div>
     </div>
     <div id="delete-box">
       <img
@@ -145,27 +157,28 @@
       <input type="range" min="2" max="96" step="2" id="cores-slider" />
     </div>
     <script
+      type="module"
       src="{{ get_serverside_file('scripts', 'scripts.js') }}"
       defer
     ></script>
     <script defer>
-      document.querySelectorAll(".node2").forEach(e => {
+      document.querySelectorAll(".node2").forEach((e) => {
         const handleEv = (ev) => {
-          e.classList.remove("node2")
-          e.classList.remove("inside")
-          document.querySelectorAll(".container")[0].appendChild(e)
-          e.classList.add("node")
+          e.classList.remove("node2");
+          e.classList.remove("inside");
+          document.querySelectorAll(".container")[0].appendChild(e);
+          e.classList.add("node");
           const clientX = ev.touchevs ? ev.touches[0].clientX : ev.clientX;
           const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
           const x = clientX;
           const y = clientY;
           e.style.left = x + "px";
           e.style.top = y + "px";
-          makeNodes()
-          e.removeEventListener("click", handleEv)
-        }
-        e.addEventListener("click", handleEv)
-      })
+          makeNodes();
+          e.removeEventListener("click", handleEv);
+        };
+        e.addEventListener("click", handleEv);
+      });
     </script>
   </body>
 </html>

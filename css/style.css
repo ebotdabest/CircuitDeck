@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
 * {
   background-color: wheat;
@@ -25,7 +25,7 @@ body {
   width: 15%;
   display: flex;
   flex-direction: column;
-  z-index: 3;
+  z-index: 10;
   background-color: burlywood;
   border-left: 7px black solid;
   padding-left: 10px;
@@ -75,7 +75,8 @@ body {
   margin-bottom: 10px;
 }
 
-.card, .duplicateable-pc {
+.card,
+.duplicateable-pc {
   position: absolute;
   cursor: move;
   background: bisque;
@@ -85,7 +86,7 @@ body {
   width: min-content;
   min-width: 300px;
   min-height: 150px;
-  height:min-content;
+  height: min-content;
   user-select: none;
 }
 
@@ -101,7 +102,9 @@ body {
   margin-top: 0;
 }
 
-.card button, p, .duplicateable h2 {
+.card button,
+p,
+.duplicateable h2 {
   background: bisque;
   margin-top: 10px;
 }
@@ -135,15 +138,35 @@ body {
   z-index: 2;
 }
 
-.node h2 {
+.inside {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  grid-template-rows: repeat(3, auto);
+  gap: 5px;
+  align-items: center;
+  background-color: burlywood;
+  padding: 5px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  height: min-content;
+  user-select: none;
+  padding: 5px;
+  z-index: 1;
+  margin-top: 5px;
+}
+
+.node h2,
+.inside h2 {
   grid-column: 4 / 5;
   grid-row: 1;
   font-size: 25px;
   margin: 0;
   align-self: end;
   background-color: burlywood;
-} 
-.node img {
+}
+.node img,
+.inside img {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
   height: 60px;
@@ -152,7 +175,8 @@ body {
   margin-bottom: 5px;
 }
 
-.node .cpu {
+.node .cpu,
+.inside .cpu {
   font-size: 15px;
   grid-column: 1 / 4;
   grid-row: 3;
@@ -161,7 +185,8 @@ body {
   margin-bottom: 5px;
 }
 
-.node .memory {
+.node .memory,
+.inside .memory {
   grid-column: 1 / 4;
   grid-row: 2;
   font-size: 15px;
@@ -169,7 +194,8 @@ body {
   background-color: burlywood;
 }
 
-.node .settings {
+.node .settings,
+.inside .settings {
   font-size: 20px;
   grid-column: 5;
   grid-row: 3;
@@ -236,7 +262,7 @@ body {
   margin: 0;
   background-color: burlywood;
   margin-bottom: 5px;
-} 
+}
 
 .duplicateable-app .settings {
   font-size: 20px;
@@ -273,7 +299,13 @@ body {
   cursor: pointer;
 }
 
-.duplicateable-app:hover, .node:hover, .duplicateable-pc:hover, .card:hover, #menu-button:hover, #button-pc:hover, .settings:hover {
+.duplicateable-app:hover,
+.node:hover,
+.duplicateable-pc:hover,
+.card:hover,
+#menu-button:hover,
+#button-pc:hover,
+.settings:hover {
   outline: solid 2px rgb(255, 255, 255);
 }
 
@@ -288,16 +320,22 @@ body {
   margin: 0;
 }
 
-#workspaces{
+#workspaces {
   display: flex;
   justify-content: center;
   align-items: center;
   position: static;
   width: min-content;
   height: 5vh;
-  z-index: 10;
+  z-index: 3;
   -webkit-overflow-scrolling: touch;
   background-color: rgb(77, 54, 43);
+}
+
+.workspace {
+  position: relative;
+  z-index: -1;
+  width: min-content;
 }
 
 #delete-box {
@@ -315,14 +353,15 @@ body {
   height: 250px;
 }
 
-#delete-box img{
+#delete-box img {
   width: 75%;
   height: 75%;
   background: bisque;
   user-select: none;
 }
 
-#pc-create-ui {
+#pc-create-ui,
+#workspace-create-ui {
   position: absolute;
   top: 30%;
   left: 35%;
@@ -341,6 +380,21 @@ body {
   z-index: 10;
 }
 
-#pc-create-ui h2, #pc-create-ui p, #pc-create-ui span{
+#pc-create-ui h2,
+#workspace-create-ui h2,
+#pc-create-ui p,
+#workspace-create-ui button #pc-create-ui span {
   background-color: burlywood;
+}
+
+#process-holder {
+  background: wheat;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: min-content;
+  min-width: 300px;
+  min-height: 150px;
+  height: min-content;
+  user-select: none;
 }
