@@ -5,7 +5,12 @@ import random as r
 from datetime import datetime as dt
 import json
 
-BASEDIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "kalszterek")
+path_name = "kalszterek"
+
+BASEDIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), path_name)
+def refresh_path_dir():
+    global BASEDIR
+    BASEDIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), path_name)
 
 
 # [[ FUNCTIONALITY SECTION ]]
@@ -207,6 +212,14 @@ def load_root_config():
             while needToRun[t.name] >= 1:
                 spread_computers()
 
+def swap_env(folder_name):
+    global path_name
+    Computer.COMPUTERS.clear()
+    ProcessAbstract.RUN_REQUIREMENTS.clear()
+    ProcessAbstract.TEMPLATES.clear()
+
+    path_name = folder_name
+    refresh_path_dir()
 
 load_root_config()
 
@@ -225,10 +238,12 @@ def ws_address(args):
 
 @http_route("/api/refresh_computers")
 def rc(args):
-    print("Doing refresh!")
     for c in Computer.COMPUTERS:
-        print("Sending!")
-        send_to_client(json.dumps({"type": "addComputer", "name": c.name, "proc": c.max_proc, "mem": c.max_mem}))
+        send_to_client(json.dumps({"type": "addComputer", "name": c.name, "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
+
+    for t in ProcessAbstract.TEMPLATES:
+        send_to_client(json.dumps({"type": "registerProcess", "name": t.name, "proc": t.required_processor, "mem": t.required_memory}))
+    
 
     return json_response({"response": True})
 
