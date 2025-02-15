@@ -7,14 +7,18 @@
 }
 
 body {
+  display: block;
   padding: 0;
 }
 
 .container {
+  display: block;
   position: relative;
-  width: 100vw;
+  width: 85vw;
   height: 100vh;
   overflow: hidden;
+  display: block;
+  z-index: 0;
 }
 
 .menu {
@@ -90,6 +94,10 @@ body {
   user-select: none;
 }
 
+.card {
+  z-index: 3 !important;
+}
+
 .duplicateable-pc {
   outline: solid 2px black;
   position: relative;
@@ -135,7 +143,7 @@ p,
   height: min-content;
   user-select: none;
   padding: 5px;
-  z-index: 2;
+  z-index: 4 !important;
 }
 
 .inside {
@@ -342,21 +350,22 @@ p,
   position: absolute;
   bottom: 0;
   left: 0;
-  background: bisque;
+  background: transparent;
   padding: 20px;
   border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  outline: solid 2px burlywood;
+  outline: dotted 2px red;
   width: 250px;
   height: 250px;
+  z-index: 2 !important;
 }
 
 #delete-box img {
   width: 75%;
   height: 75%;
-  background: bisque;
+  background: transparent;
   user-select: none;
 }
 
@@ -380,10 +389,12 @@ p,
   z-index: 10;
 }
 
-#pc-create-ui h2,
+#workspace-form,
+#pc-form h2,
 #workspace-create-ui h2,
-#pc-create-ui p,
-#workspace-create-ui button #pc-create-ui span {
+#workspace-form p,
+#pc-form p,
+#workspace-form button #pc-form span {
   background-color: burlywood;
 }
 

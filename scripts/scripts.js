@@ -186,6 +186,87 @@ menuButton.addEventListener("click", function () {
   }
 });
 
+const addWorkspaceButton = document.getElementById("add-workspace");
+const workspacesContainer = document.getElementById("workspaces");
+const body = document.body;
+
+var activeWorkspaceId = null;
+
+function makeWorkspaces(newWorkspace, newButton, name) {
+  newWorkspace.classList.add("container");
+  newWorkspace.classList.add("workspace-content");
+  newWorkspace.id = name + "-workspace";
+  newButton.classList.add("workspace");
+  newButton.id = name;
+  newButton.textContent = name;
+
+  newWorkspace.style.display = "none";
+}
+
+function setActiveWorkspace(workspaceButton) {
+  const workspaceId = workspaceButton.id;
+  const workspaceContent = document.getElementById(workspaceId + "-workspace");
+
+  if (!workspaceContent) {
+    console.error(`Workspace content not found for button ID: ${workspaceId}`);
+    return;
+  }
+
+  document.querySelectorAll(".workspace-content").forEach((ws) => {
+    ws.style.display = "none";
+  });
+
+  workspaceContent.style.display = "block";
+  activeWorkspaceId = workspaceId;
+  console.log(`Active workspace set to: ${workspaceId}`);
+}
+
+workspacesContainer.addEventListener("click", function (event) {
+  if (event.target.classList.contains("workspace")) {
+    setActiveWorkspace(event.target);
+  }
+});
+
+const form = document.getElementById("workspace-form");
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  const name = form.querySelector("#workspace-name").value;
+  const newWorkspace = document.createElement("div");
+  const newButton = document.createElement("button");
+  makeWorkspaces(newWorkspace, newButton, name);
+
+  body.appendChild(newWorkspace);
+  workspacesContainer.appendChild(newButton);
+
+  setActiveWorkspace(newButton);
+
+  const UI = document.getElementById("workspace-create-ui");
+  UI.style.visibility = "hidden";
+  form.reset();
+});
+
+addWorkspaceButton.addEventListener("click", function () {
+  const UI = document.getElementById("workspace-create-ui");
+  UI.style.visibility = "hidden";
+  if (UI.style.visibility === "hidden" || UI.style.visibility === "") {
+    UI.style.visibility = "visible";
+  } else {
+    UI.style.visibility = "hidden";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const initialWorkspaceButton = document.querySelector(
+    "#workspaces button.workspace"
+  );
+
+  if (initialWorkspaceButton) {
+    setActiveWorkspace(initialWorkspaceButton);
+  } else {
+    console.log("No initial workspaces found.");
+  }
+});
+
 document.addEventListener("click", function (e) {
   const original = e.target.closest(".duplicateable-pc");
   if (original) {
@@ -195,8 +276,15 @@ document.addEventListener("click", function (e) {
     clone.style.zIndex = "500";
     clone.style.left = `${e.clientX - 150}px`;
     clone.style.top = `${e.clientY - 75}px`;
-    document.querySelector(".container").appendChild(clone);
-    makeCards();
+    clone.id = "copy";
+    const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
+    const activeWorkspaceContent = document.getElementById(
+      activeWorkspaceContentId
+    );
+    if (activeWorkspaceContent) {
+      activeWorkspaceContent.appendChild(clone);
+      makeNodes();
+    }
   }
 });
 
@@ -209,8 +297,14 @@ document.addEventListener("click", function (e) {
     clone.style.zIndex = "500";
     clone.style.left = `${e.clientX - 150}px`;
     clone.style.top = `${e.clientY - 75}px`;
-    document.querySelector(".container").appendChild(clone);
-    makeNodes();
+    const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
+    const activeWorkspaceContent = document.getElementById(
+      activeWorkspaceContentId
+    );
+    if (activeWorkspaceContent) {
+      activeWorkspaceContent.appendChild(clone);
+      makeNodes();
+    }
   }
 });
 
@@ -293,13 +387,15 @@ function makeNode2() {
 const overlapStartTimes = new Map();
 
 function isOverlapping(rect1, rect2) {
-  const result = !(
-    rect1.right < rect2.left ||
-    rect1.left > rect2.right ||
-    rect1.bottom < rect2.top ||
-    rect1.top > rect2.bottom
+  const centerX = rect2.left + rect2.width / 2;
+  const centerY = rect2.top + rect2.height / 2;
+
+  return (
+    centerX > rect1.left &&
+    centerX < rect1.right &&
+    centerY > rect1.top &&
+    centerY < rect1.bottom
   );
-  return result;
 }
 
 function addToPC(card, app) {
@@ -395,43 +491,5 @@ pcButton.addEventListener("click", function () {
     pcUI.style.visibility = "visible";
   } else {
     pcUI.style.visibility = "hidden";
-  }
-});
-
-const addWorkspaceButton = document.getElementById("add-workspace");
-
-function makeWorkspaces(newWorkspace, newButton, name) {
-  const workspaces = document.querySelectorAll(".container");
-  const workspacesAmount = workspaces.length;
-  newWorkspace.classList.add("container");
-  newWorkspace.classList.add(workspacesAmount + 1);
-  newButton.classList.add("workspace");
-  newButton.id = name;
-  newButton.textContent = name;
-}
-
-const form = document.getElementById("workspace-form");
-form.addEventListener("submit", function (event) {
-  event.preventDefault();
-  const name = form.querySelector("#workspace-name").value;
-  console.log(name);
-  const newWorkspace = document.createElement("div");
-  const newButton = document.createElement("button");
-  const workspaces = document.getElementById("workspaces");
-  makeWorkspaces(newWorkspace, newButton, name);
-  document.body.appendChild(newWorkspace);
-  workspaces.appendChild(newButton);
-
-  const UI = document.getElementById("workspace-create-ui");
-  UI.style.visibility = "hidden";
-  form.reset();
-});
-
-addWorkspaceButton.addEventListener("click", function () {
-  const UI = document.getElementById("workspace-create-ui");
-  if (UI.style.visibility === "hidden" || UI.style.visibility === "") {
-    UI.style.visibility = "visible";
-  } else {
-    UI.style.visibility = "hidden";
   }
 });

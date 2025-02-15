@@ -97,7 +97,7 @@
       </div>
     </div>
 
-    <div class="container 1">
+    <div class="container workspace-content" id="Base-workspace">
       <div class="card" id="copy">
         <h2 name="name">Card 69</h2>
         <p name="proc">Drag me!</p>
@@ -149,12 +149,14 @@
     </div>
     <div id="pc-create-ui">
       <h2>Create PC</h2>
-      <p>Name</p>
-      <input type="text" name="pcname" id="pc-name" />
-      <p>Memory: <span id="memory-value">1</span></p>
-      <input type="range" min="1" max="131072" id="memory-slider" />
-      <p>Cores: <span id="cores-value">2</span></p>
-      <input type="range" min="2" max="96" step="2" id="cores-slider" />
+      <form id="pc-form">
+        <p>Name</p>
+        <input type="text" name="pcname" id="pc-name" />
+        <p>Memory: <span id="memory-value">1</span></p>
+        <input type="range" min="1" max="131072" id="memory-slider" />
+        <p>Cores: <span id="cores-value">2</span></p>
+        <input type="range" min="2" max="96" step="2" id="cores-slider" />
+      </form>
     </div>
     <script
       type="module"
