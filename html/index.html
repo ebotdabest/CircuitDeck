@@ -18,6 +18,8 @@
       import { send_to_server } from "/scripts/signals.js";
       import { makeCards } from "/scripts/scripts.js";
       import { makeNodes } from "/scripts/scripts.js";
+      import { createCardDiv } from "/scripts/scripts.js"
+      import { createNodeDiv } from "/scripts/scripts.js"
 
       document.body.addEventListener("serverOpen", () => {
         send_to_server("/api/refresh_computers", {}, () => {});
@@ -26,41 +28,18 @@
         const command = JSON.parse(e.detail.message);
         switch (command.type) {
           case "addComputer":
-            const clone = document.querySelector("#copy").cloneNode(true);
+            const clone = createCardDiv(command);
+            clone.classList.add("card");
+            clone.id = "copy";
             document.querySelectorAll(".container")[0].appendChild(clone);
-
-            for (const e of clone.children) {
-              const name = e.getAttribute("name");
-              if (name === "name") {
-                e.innerText = command.name;
-              } else if (name === "proc") {
-                e.innerText = `Processor: ${command.proc}`;
-              } else if (name === "mem") {
-                e.innerText = `Memory: ${command.mem}`;
-              }
-            }
-            clone.hidden = false;
             makeCards();
             makeNodes();
             break;
           case "registerProcess":
-            const clone2 = document
-              .querySelector("#copy-process")
-              .cloneNode(true);
+            const clone2 = createNodeDiv(command)
             document.querySelectorAll(".items-app")[0].appendChild(clone2);
             clone2.classList.add("duplicateable-app");
-            clone2.hidden = false;
-            for (const e of clone2.children) {
-              const name = e.getAttribute("name");
-              if (name === "name") {
-                e.innerText = command.name;
-              } else if (name === "mem") {
-                e.innerText = command.mem;
-              } else if (name === "proc") {
-                e.innerText = command.proc;
-              }
-            }
-            break;
+            break
         }
       });
     </script>
@@ -79,23 +58,6 @@
       </div>
       <button type="button" id="add-workspace">+</button>
     </div>
-    <div hidden class="card" id="copy">
-      <h2 name="name">Card 69</h2>
-      <p name="proc">Drag me!</p>
-      <p name="mem">Drag me!</p>
-      <div id="process-holder">
-        <div hidden id="copy-process">
-          <img
-            src="{{ get_serverside_file('content', 'google_logo.png') }}"
-            alt="VSCodelogo"
-          />
-          <h2 name="name">Google</h2>
-          <p class="memory" name="mem">Memory used:</p>
-          <p class="cpu" name="proc">CPU used:</p>
-          <button class="settings">⚙️</button>
-        </div>
-      </div>
-    </div>
 
     <div class="container workspace-content" id="Base-workspace">
       <div class="card" id="copy">
@@ -111,7 +73,7 @@
             <h2 name="name">Google</h2>
             <p class="memory" name="mem">Memory used:</p>
             <p class="cpu" name="proc">CPU used:</p>
-            <button class="settings">⚙️</button>
+            <button class="power">⏻</button>
           </div>
         </div>
       </div>
@@ -120,24 +82,6 @@
       <button id="menu-button">◀</button>
       <button id="button-pc" type="button">Create PC</button>
       <div class="items-pc">
-        <div class="duplicateable-pc">
-          <h2>Card to clone!</h2>
-          <p>Click me to clone!</p>
-        </div>
-        <div class="duplicateable-pc">
-          <h2>Card 2 clone!</h2>
-          <p>Click me too!</p>
-          <button>Sample button</button>
-        </div>
-        <div class="duplicateable-pc">
-          <h2>Card to clone!</h2>
-          <p>Click me to clone!</p>
-        </div>
-        <div class="duplicateable-pc">
-          <h2>Card 2 clone!</h2>
-          <p>Click me too!</p>
-          <button>Sample button</button>
-        </div>
       </div>
       <div class="items-app"></div>
     </div>
@@ -156,6 +100,7 @@
         <input type="range" min="1" max="131072" id="memory-slider" />
         <p>Cores: <span id="cores-value">2</span></p>
         <input type="range" min="2" max="96" step="2" id="cores-slider" />
+        <button type="submit" id="pc-create-button">Create</button>
       </form>
     </div>
     <script

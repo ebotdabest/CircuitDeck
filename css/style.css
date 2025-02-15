@@ -202,8 +202,8 @@ p,
   background-color: burlywood;
 }
 
-.node .settings,
-.inside .settings {
+.node .power,
+.inside .power {
   font-size: 20px;
   grid-column: 5;
   grid-row: 3;
@@ -272,7 +272,7 @@ p,
   margin-bottom: 5px;
 }
 
-.duplicateable-app .settings {
+.duplicateable-app .power {
   font-size: 20px;
   grid-column: 5;
   grid-row: 3;
@@ -293,9 +293,9 @@ p,
   justify-content: center;
   position: absolute;
   left: 5%;
-  top: 52%;
-  width: 10vw;
-  height: 5vh;
+  top: 48%;
+  width: min-content;
+  height: auto;
   background-color: burlywood;
   padding: 5px;
   border-radius: 10px;
@@ -389,8 +389,12 @@ p,
   z-index: 10;
 }
 
+#pc-form {
+  background-color: burlywood;
+}
+
 #workspace-form,
-#pc-form h2,
+#pc-create-ui h2,
 #workspace-create-ui h2,
 #workspace-form p,
 #pc-form p,

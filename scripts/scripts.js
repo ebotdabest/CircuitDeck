@@ -230,19 +230,21 @@ workspacesContainer.addEventListener("click", function (event) {
 const form = document.getElementById("workspace-form");
 form.addEventListener("submit", function (event) {
   event.preventDefault();
-  const name = form.querySelector("#workspace-name").value;
-  const newWorkspace = document.createElement("div");
-  const newButton = document.createElement("button");
-  makeWorkspaces(newWorkspace, newButton, name);
-
-  body.appendChild(newWorkspace);
-  workspacesContainer.appendChild(newButton);
-
-  setActiveWorkspace(newButton);
-
-  const UI = document.getElementById("workspace-create-ui");
-  UI.style.visibility = "hidden";
-  form.reset();
+  const name = form.querySelector("#workspace-name").value.trim();
+  if (name === "") {
+    alert("Workspace name cannot be empty.");
+    return;
+  } else {
+    const newWorkspace = document.createElement("div");
+    const newButton = document.createElement("button");
+    makeWorkspaces(newWorkspace, newButton, name);
+    body.appendChild(newWorkspace);
+    workspacesContainer.appendChild(newButton);
+    etActiveWorkspace(newButton);
+    const UI = document.getElementById("workspace-create-ui");
+    UI.style.visibility = "hidden";
+    form.reset();
+  }
 });
 
 addWorkspaceButton.addEventListener("click", function () {
@@ -283,7 +285,7 @@ document.addEventListener("click", function (e) {
     );
     if (activeWorkspaceContent) {
       activeWorkspaceContent.appendChild(clone);
-      makeNodes();
+      makeCards();
     }
   }
 });
@@ -332,6 +334,9 @@ function startDeleteTimer(element) {
     const timer = setTimeout(() => {
       element.remove();
       deleteTimers.delete(element);
+      const elementElement = element.querySelector('[name="name"]');
+      const elementName = elementElement ? elementElement.textContent : "Element name not found!";
+      send_to_server("/api/remove", {elementName}, () => {});
     }, 1500);
     deleteTimers.set(element, timer);
   }
@@ -364,12 +369,18 @@ function checkAndDelete() {
   });
 }
 
-function makeNode2() {
+export function makeNode2() {
   document.querySelectorAll(".node2").forEach((e) => {
     const handleEv = (ev) => {
       e.classList.remove("node2");
       e.classList.remove("inside");
-      document.querySelectorAll(".container")[0].appendChild(e);
+      const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
+      const activeWorkspaceContent = document.getElementById(
+        activeWorkspaceContentId
+      );
+      if (activeWorkspaceContent) {
+        activeWorkspaceContent.appendChild(e);
+      }
       e.classList.add("node");
       const clientX = ev.touchevs ? ev.touches[0].clientX : ev.clientX;
       const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
@@ -409,16 +420,15 @@ function addToPC(card, app) {
   if (processHolder) {
     clone.id = "copy-process";
     processHolder.appendChild(clone);
-    send_to_server("/api/add_to_compiuter", { card, clone }, () => {});
+    const cardNameElement = card.querySelector('[name="name"]');
+    const cardName = cardNameElement ? cardNameElement.textContent : "Card Name Not Found";
+    const appNameElement = clone.querySelector('[name="name"]');
+    const appName = appNameElement ? appNameElement.textContent : "App Name Not Found";
+    send_to_server("/api/add_to_computer", { pcName: cardName, appType: appName }, () => {});
     makeNode2();
   } else {
     console.error("No element with ID 'process-holder' found inside the card.");
   }
-}
-
-function addToFloating(node) {
-  send_to_server("/api/add_to_floating", { node }, () => {});
-  console.log("Node added to floating area:", node);
 }
 
 function checkAndAdd() {
@@ -453,12 +463,11 @@ function checkAndAdd() {
     if (!overlapsWithAnyCard && overlapStartTimes.has(node)) {
       node.style.outline = "";
       overlapStartTimes.delete(node);
-      addToFloating(node);
     }
   });
 }
 
-setInterval(checkAndAdd, 500);
+setInterval(checkAndAdd, 750);
 
 document.addEventListener("mousemove", checkAndDelete);
 
@@ -491,5 +500,97 @@ pcButton.addEventListener("click", function () {
     pcUI.style.visibility = "visible";
   } else {
     pcUI.style.visibility = "hidden";
+  }
+});
+
+export function createCardDiv(data) {
+  const cardDiv = document.createElement("div");
+
+  const h2Element = document.createElement("h2");
+  h2Element.name = "name";
+  h2Element.textContent = data.name;
+
+  const procParagraph = document.createElement("p");
+  procParagraph.name = "proc";
+  procParagraph.textContent = "Processor: " + data.proc;
+
+  const memParagraph = document.createElement("p");
+  memParagraph.name = "mem";
+  memParagraph.textContent = "Memory: " + data.mem;
+
+  const processHolderDiv = document.createElement("div");
+  processHolderDiv.id = "process-holder";
+
+  cardDiv.appendChild(h2Element);
+  cardDiv.appendChild(procParagraph);
+  cardDiv.appendChild(memParagraph);
+  cardDiv.appendChild(processHolderDiv);
+  
+  return cardDiv;
+}
+
+export function createNodeDiv(data) {
+  const processDiv = document.createElement("div");
+  processDiv.id = "copy-process";
+
+  const imgElement = document.createElement("img");
+  imgElement.src =
+    data.imageSrc || "{{ get_serverside_file('content', {data.img}) }}";
+  imgElement.alt = data.imageAlt || "Process Icon";
+
+  const h2Element = document.createElement("h2");
+  h2Element.name = "name";
+  h2Element.textContent = data.name;
+
+  const memoryParagraph = document.createElement("p");
+  memoryParagraph.classList.add("memory");
+  memoryParagraph.name = "mem";
+  memoryParagraph.textContent = "Memory used: " + data.mem;
+
+  const cpuParagraph = document.createElement("p");
+  cpuParagraph.classList.add("cpu");
+  cpuParagraph.name = "proc";
+  cpuParagraph.textContent = "CPU used: " + data.proc;
+
+  const powerButton = document.createElement("button");
+  powerButton.classList.add("power");
+  powerButton.textContent = "⏻";
+  if (data.onPowerButtonClick) {
+    powerButton.addEventListener("click", data.onPowerButtonClick);
+  }
+
+  processDiv.appendChild(imgElement);
+  processDiv.appendChild(h2Element);
+  processDiv.appendChild(memoryParagraph);
+  processDiv.appendChild(cpuParagraph);
+  processDiv.appendChild(powerButton);
+
+  return processDiv;
+}
+
+function makePC(name, mem, proc) {
+  const pcs = document.querySelector('.items-pc')
+  send_to_server("/api/make_compiuter", { name: name, mem: mem, proc: proc*100}, () => {});
+  const data = {name: name, mem:mem, proc: proc*100}
+  var pc = createCardDiv(data)
+  pc.classList.add('duplicateable-pc')
+  pcs.appendChild(pc);
+  }
+
+
+const form2 = document.getElementById("pc-form");
+  form2.addEventListener("submit", function (event) {
+  event.preventDefault(); 
+  const name = form2.querySelector("#pc-name").value.trim();
+  const memory = form2.querySelector("#memory-slider").value;
+  const cores = form2.querySelector("#cores-slider").value;
+  if (name === "") {
+    alert("PC name cannot be empty.");
+    return;
+  } else {
+    makePC(name, memory, cores);
+    const UI = document.getElementById("pc-create-ui");
+    UI.style.visibility = "hidden";
+    form2.reset();
   }
 });
