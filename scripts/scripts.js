@@ -369,6 +369,33 @@ function checkAndDelete() {
   });
 }
 
+export function turnInsiderNode(e) {
+  const handleEv = (ev) => {
+    e.classList.remove("node2");
+    e.classList.remove("inside");
+    const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
+    const activeWorkspaceContent = document.getElementById(
+      activeWorkspaceContentId
+    );
+    if (activeWorkspaceContent) {
+      activeWorkspaceContent.appendChild(e);
+    }
+    e.classList.add("node");
+    const clientX = ev.touchevs ? ev.touches[0].clientX : ev.clientX;
+    const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+    const x = clientX;
+    const y = clientY;
+    e.style.left = x + "px";
+    e.style.top = y + "px";
+    makeNodes();
+
+    send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, () => {})
+
+    e.removeEventListener("click", handleEv);
+  };
+  e.addEventListener("click", handleEv);
+}
+
 export function makeNode2() {
   document.querySelectorAll(".node2").forEach((e) => {
     const handleEv = (ev) => {
@@ -389,6 +416,10 @@ export function makeNode2() {
       e.style.left = x + "px";
       e.style.top = y + "px";
       makeNodes();
+
+      send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, () => {})
+
+      e.getAttribute("proc")
       e.removeEventListener("click", handleEv);
     };
     e.addEventListener("click", handleEv);
@@ -422,9 +453,23 @@ function addToPC(card, app) {
     processHolder.appendChild(clone);
     const cardNameElement = card.querySelector('[name="name"]');
     const cardName = cardNameElement ? cardNameElement.textContent : "Card Name Not Found";
+    console.log(cardName)
     const appNameElement = clone.querySelector('[name="name"]');
     const appName = appNameElement ? appNameElement.textContent : "App Name Not Found";
-    send_to_server("/api/add_to_computer", { pcName: cardName, appType: appName }, () => {});
+    if (clone.hasAttribute("proc")) {
+      send_to_server("/api/add_process", {pcName: cardName, appType: appName, appId: clone.getAttribute("proc"),
+        status: "a"
+      }, (data) => {
+        clone.setAttribute("parent", cardName)
+      })
+    }else {
+      send_to_server("/api/add_to_computer", { pcName: cardName, appType: appName }, (data) => {
+        clone.setAttribute("proc", data.processId)
+        clone.setAttribute("parent", cardName)
+        clone.querySelector('[name="proc-id"]').textContent = `Process ID: ${data.processId}`
+      });
+    }
+    
     makeNode2();
   } else {
     console.error("No element with ID 'process-holder' found inside the card.");
@@ -505,17 +550,19 @@ pcButton.addEventListener("click", function () {
 
 export function createCardDiv(data) {
   const cardDiv = document.createElement("div");
+  
+  cardDiv.setAttribute("name", data.name)
 
   const h2Element = document.createElement("h2");
-  h2Element.name = "name";
+  h2Element.setAttribute("name", "name")
   h2Element.textContent = data.name;
 
   const procParagraph = document.createElement("p");
-  procParagraph.name = "proc";
+  procParagraph.setAttribute("name", "proc")
   procParagraph.textContent = "Processor: " + data.proc;
 
   const memParagraph = document.createElement("p");
-  memParagraph.name = "mem";
+  memParagraph.setAttribute("name", "mem")
   memParagraph.textContent = "Memory: " + data.mem;
 
   const processHolderDiv = document.createElement("div");
@@ -535,32 +582,35 @@ export function createNodeDiv(data) {
 
   const imgElement = document.createElement("img");
   imgElement.src =
-    data.imageSrc || "{{ get_serverside_file('content', {data.img}) }}";
+    // data.imageSrc || "{{ get_serverside_file('content', {data.img}) }}";
+    data.imageSrc || "/content/process.png";
   imgElement.alt = data.imageAlt || "Process Icon";
 
   const h2Element = document.createElement("h2");
-  h2Element.name = "name";
+  h2Element.setAttribute("name", "name")
   h2Element.textContent = data.name;
+
+  const procParagraph = document.createElement("p")
+  procParagraph.setAttribute("name", "proc-id")
+  procParagraph.classList.add("proc-id")
 
   const memoryParagraph = document.createElement("p");
   memoryParagraph.classList.add("memory");
-  memoryParagraph.name = "mem";
+  memoryParagraph.setAttribute("name", "mem")
   memoryParagraph.textContent = "Memory used: " + data.mem;
 
   const cpuParagraph = document.createElement("p");
   cpuParagraph.classList.add("cpu");
-  cpuParagraph.name = "proc";
+  cpuParagraph.setAttribute("name", "proc")
   cpuParagraph.textContent = "CPU used: " + data.proc;
 
   const powerButton = document.createElement("button");
   powerButton.classList.add("power");
-  powerButton.textContent = "⏻";
-  if (data.onPowerButtonClick) {
-    powerButton.addEventListener("click", data.onPowerButtonClick);
-  }
+  powerButton.textContent = "❌";
 
   processDiv.appendChild(imgElement);
   processDiv.appendChild(h2Element);
+  processDiv.appendChild(procParagraph)
   processDiv.appendChild(memoryParagraph);
   processDiv.appendChild(cpuParagraph);
   processDiv.appendChild(powerButton);
@@ -570,7 +620,7 @@ export function createNodeDiv(data) {
 
 function makePC(name, mem, proc) {
   const pcs = document.querySelector('.items-pc')
-  send_to_server("/api/make_compiuter", { name: name, mem: mem, proc: proc*100}, () => {});
+  send_to_server("/api/make_computer", { name: name, mem: mem, proc: proc*100}, () => {});
   const data = {name: name, mem:mem, proc: proc*100}
   var pc = createCardDiv(data)
   pc.classList.add('duplicateable-pc')
@@ -594,3 +644,24 @@ const form2 = document.getElementById("pc-form");
     form2.reset();
   }
 });
+
+export function makePowerButtonsAgain() {
+  document.querySelectorAll(".power").forEach(powerButton => {
+    const handleEv = (e) => {
+      e.stopPropagation()
+      send_to_server("/api/swap_process", {procId: powerButton.parentNode.getAttribute("proc"), pcName: powerButton.parentNode.getAttribute("parent")}, () => {})
+      if (!powerButton.parentNode.classList.contains("inactive")) {
+        powerButton.parentNode.classList.add("inactive")
+      }else {
+        powerButton.parentNode.classList.remove("inactive")
+      }
+    }
+    try {
+      powerButton.removeEventListener("click", handleEv)
+
+    }catch {
+      // It doesn't exist
+    }
+    powerButton.addEventListener("click", handleEv)
+  })
+}

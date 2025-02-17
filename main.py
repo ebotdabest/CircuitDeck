@@ -1,4 +1,4 @@
-from framework import start_server, http_route, render_webpage, json_response, send_to_client
+from framework import start_server, http_route, render_webpage, json_response, send_to_client, do_img_render
 from typing import List, Dict, Any, Optional
 import webbrowser, os, sys, string
 import random as r
@@ -72,13 +72,16 @@ class Computer:
     COMPUTERS: List[Optional["Computer"]] = []
 
     class Process:
-        def __init__(self, abstract: ProcessAbstract, parent_name: str, process_id: str = None):
+        def __init__(self, abstract: ProcessAbstract, parent_name: str, process_id: str = None, original_data = False):
             self.created_at = dt.now().strftime("%d-%m-%Y %H:%M:%S")
             self.process_id = generate_process_id() if not process_id else process_id
             self.parent_name = parent_name
             self.abstract = abstract
             self.status = "AKTÍV"
-            if process_id:
+            if process_id and original_data:
+                pass
+
+            elif process_id:
                 with open(self.path, encoding="utf-8") as f:
                     data = f.read().strip().split("\n")
                     self.created_at = data[0]
@@ -230,16 +233,31 @@ PORT = 8080
 
 @http_route("/")
 def index(args):
+    do_img_render('content', 'process.png')
     return render_webpage("index.html")
 
 @http_route("/get_ws_address")
 def ws_address(args):
     return json_response({"address": f"{ADDRESS}:{PORT}"})
 
+@http_route("/get_positions")
+def position(args):
+    return json_response({})
+
 @http_route("/api/refresh_computers")
 def rc(args):
     for c in Computer.COMPUTERS:
-        send_to_client(json.dumps({"type": "addComputer", "name": c.name, "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
+        send_to_client(json.dumps({"type": "addComputer", "name": c.name,
+                                   "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
+        for p in c.processes:
+            send_to_client(json.dumps({
+                "type": "existingProcess",
+                "cname": c.name,
+                "name": p.abstract.name,
+                "pid": p.process_id,
+                "mem": p.abstract.required_memory,
+                "proc": p.abstract.required_processor
+            }))
 
     for t in ProcessAbstract.TEMPLATES:
         send_to_client(json.dumps({"type": "registerProcess", "name": t.name, "proc": t.required_processor, "mem": t.required_memory}))
@@ -247,6 +265,64 @@ def rc(args):
 
     return json_response({"response": True})
 
+@http_route("/api/add_to_computer")
+def start_process(args):
+    for c in Computer.COMPUTERS:
+        if c.name == args["pcName"]:
+            proc = Computer.Process(ProcessAbstract.get_process_template(args["appType"]), c.name)
+            c.add_process(proc)
+            proc.save()
+
+            return json_response({"status": True, "processId": proc.process_id})
+
+    return json_response({"status": False})
+
+@http_route("/api/end_process")
+def end_process(args):
+    for c in Computer.COMPUTERS:
+        if c.name == args["pcName"]:
+            to_remove = []
+            for i, p in enumerate(c.processes):
+                if p.process_id == args["procName"]:
+                    c.end_process(i)
+                    to_remove.append(i)
+
+            c.processes = [p for i, p in enumerate(c.processes) for tr in to_remove if i != tr]
+            c.refresh_resources()
+            return json_response({"status": True})
+
+    return json_response({"status": False})
+
+@http_route("/api/add_process")
+def add_process(args):
+    for c in Computer.COMPUTERS:
+        if c.name == args["pcName"]:
+            p = Computer.Process(ProcessAbstract.get_process_template(args["appType"]), c.name, args["appId"], True)
+
+            if args["status"] == "i":
+                p.swap_status()
+
+            if not c.can_run(p.abstract):
+                return json_response({"result": False})
+
+            c.add_process(p)
+
+            return json_response({"result": True})
+
+    return json_response({"result": False})
+
+@http_route("/api/swap_process")
+def disable_process(args):
+    for c in Computer.COMPUTERS:
+        if c.name == args["pcName"]:
+            for p in c.processes:
+                if p.process_id == args["procId"]:
+                    p.swap_status()
+                    p.save()
+
+                    return json_response({"result": True})
+
+    return json_response({"result": False})
 
 # webbrowser.open("http://localhost:8080")
 start_server(ADDRESS, PORT)

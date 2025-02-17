@@ -18,6 +18,7 @@
       import { send_to_server } from "/scripts/signals.js";
       import { makeCards } from "/scripts/scripts.js";
       import { makeNodes } from "/scripts/scripts.js";
+      import { turnInsiderNode } from "/scripts/scripts.js";
       import { createCardDiv } from "/scripts/scripts.js"
       import { createNodeDiv } from "/scripts/scripts.js"
 
@@ -40,7 +41,18 @@
             document.querySelectorAll(".items-app")[0].appendChild(clone2);
             clone2.classList.add("duplicateable-app");
             break
+          case "existingProcess":
+            const ep = createNodeDiv(command)
+            ep.setAttribute("proc", command.pid)
+            ep.setAttribute("parent", command.cname)
+            ep.classList.remove("node")
+            ep.classList.add("node2", "inside")
+            ep.querySelector('[name="proc-id"]').textContent = `Process ID: ${command.pid}`
+            document.querySelector(`[name="${command.cname}"]`).querySelector("#process-holder").appendChild(ep)
+            turnInsiderNode(ep)
+            break
         }
+        makePowerButtonsAgain()
       });
     </script>
     <div id="workspaces-wrap">
@@ -60,23 +72,7 @@
     </div>
 
     <div class="container workspace-content" id="Base-workspace">
-      <div class="card" id="copy">
-        <h2 name="name">Card 69</h2>
-        <p name="proc">Drag me!</p>
-        <p name="mem">Drag me!</p>
-        <div id="process-holder">
-          <div id="copy-process" class="node2 inside">
-            <img
-              src="{{ get_serverside_file('content', 'google_logo.png') }}"
-              alt="VSCodelogo"
-            />
-            <h2 name="name">Google</h2>
-            <p class="memory" name="mem">Memory used:</p>
-            <p class="cpu" name="proc">CPU used:</p>
-            <button class="power">⏻</button>
-          </div>
-        </div>
-      </div>
+      
     </div>
     <div class="menu">
       <button id="menu-button">◀</button>
@@ -108,7 +104,8 @@
       src="{{ get_serverside_file('scripts', 'scripts.js') }}"
       defer
     ></script>
-    <script defer>
+    <script type="module" defer>
+      import { makeNodes } from "/scripts/scripts.js";
       document.querySelectorAll(".node2").forEach((e) => {
         const handleEv = (ev) => {
           e.classList.remove("node2");

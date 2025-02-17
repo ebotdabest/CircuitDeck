@@ -13,7 +13,7 @@ fetch("/get_ws_address")
         new CustomEvent("serverMessage", { detail: { message: data.data } })
       );
     };
-  });
+});
 
 export function send_to_server(path, args, callback) {
   let str = "";
