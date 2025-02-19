@@ -410,9 +410,12 @@ p,
   width: min-content;
   min-width: 300px;
   min-height: 150px;
+  max-height: calc(3 * 150px);
   height: min-content;
   user-select: none;
+  overflow-y: auto;
 }
+
 
 img {
   user-drag: none;
@@ -442,10 +445,38 @@ img {
 
 .inactive {
   filter: grayscale(60%) brightness(80%);
-  opacity: 0.7;
+  opacity: 0.7; 
+}
+
+.inside {
   transition: filter 0.3s, opacity 0.3s;
 }
 
-.inactive > .power {
+.power {
   filter: none;
+}
+
+prc {
+  font-weight: bold;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+#process-holder::-webkit-scrollbar {
+  width: 10px;
+}
+
+#process-holder::-webkit-scrollbar-track {
+  background: burlywood;
+  border-radius: 10px;
+}
+
+#process-holder::-webkit-scrollbar-thumb {
+  background: black;
+  border-radius: 10px;
+  border: 2px solid burlywood;
+}
+
+#process-holder::-webkit-scrollbar-thumb:hover {
+  background: rgb(77, 54, 43);
 }

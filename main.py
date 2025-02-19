@@ -1,3 +1,5 @@
+from collections import Counter
+
 from framework import start_server, http_route, render_webpage, json_response, send_to_client, do_img_render
 from typing import List, Dict, Any, Optional
 import webbrowser, os, sys, string
@@ -23,6 +25,29 @@ class ProcessAbstract:
         self.__rc = run_count
         self.__rp = required_processor
         self.__rm = required_memory
+        self.__currently_active = 0
+
+    @property
+    def currently_active(self):
+        return self.__currently_active
+
+    @currently_active.setter
+    def currently_active(self, val):
+        self.__currently_active = val
+
+        if self.__currently_active != self.run_count:
+            send_to_client(json.dumps({
+                "type": "logError",
+                "app": self.__name,
+                "should": self.run_count,
+                "difference": self.run_count - self.__currently_active
+            }))
+        else:
+            send_to_client(json.dumps({
+                "type": "removeLog",
+                "app": self.__name
+            }))
+
 
     @property
     def name(self):
@@ -46,11 +71,7 @@ class ProcessAbstract:
 
     @classmethod
     def get_process_template(cls, name):
-        for p in cls.TEMPLATES:
-            if p.name == name:
-                return p
-
-        return None
+        return next((p for p in cls.TEMPLATES if p.name == name), None)
 
     def stop_all_with_this_type(self):
         for c in Computer.COMPUTERS:
@@ -78,6 +99,7 @@ class Computer:
             self.parent_name = parent_name
             self.abstract = abstract
             self.status = "AKTÍV"
+            self.abstract.currently_active += 1
             if process_id and original_data:
                 pass
 
@@ -95,12 +117,18 @@ class Computer:
                 f.write(str(self.abstract.required_memory))
 
         def destroy(self):
-            os.remove(self.path)
+            try:
+                if os.path.exists(self.path): os.remove(self.path)
+            except FileNotFoundError:
+                # Race condition already won
+                pass
 
         def swap_status(self):
             if self.status == "AKTÍV":
                 self.status = "INAKTÍV"
+                self.abstract.currently_active -= 1
             else:
+                self.abstract.currently_active += 1
                 self.status = "AKTÍV"
 
         @property
@@ -114,6 +142,7 @@ class Computer:
         self.proc = self.max_proc
         self.max_mem = memory
         self.mem = self.max_mem
+        self.refresh_resources()
 
         type(self).COMPUTERS.append(self)
 
@@ -122,11 +151,8 @@ class Computer:
         return os.path.join(BASEDIR, self.name)
 
     def refresh_resources(self):
-        self.proc = self.max_proc
-        self.mem = self.max_mem
-        for p in self.processes:
-            self.proc -= p.abstract.required_processor
-            self.mem -= p.abstract.required_memory
+        self.proc = self.max_proc - sum(p.abstract.required_processor for p in self.processes)
+        self.mem = self.max_mem - sum(p.abstract.required_memory for p in self.processes)
 
     def add_process(self, process: Process):
         process.save()
@@ -142,6 +168,13 @@ class Computer:
 
         return False
 
+    def save(self):
+        if not os.path.exists(self.path): os.mkdir(self.path)
+
+        with open(os.path.join(self.path, ".szamitogep_konfig"), "w", encoding="utf-8") as f:
+            f.write(f"{self.max_proc}\n{self.max_mem}")
+
+
     @staticmethod
     def load_computer(name):
         try:
@@ -152,10 +185,11 @@ class Computer:
                 memory = int(data[1])
                 processes = []
 
-                for f in os.listdir(os.path.join(BASEDIR, name)):
-                    if f.startswith("."): continue
-                    template = ProcessAbstract.get_process_template(f.split("-")[0])
-                    processes.append(Computer.Process(template, name, f.split("-")[1]))
+                for fn in os.listdir(os.path.join(BASEDIR, name)):
+                    if fn.startswith("."): continue
+                    template = ProcessAbstract.get_process_template(fn.split("-")[0])
+                    processes.append(Computer.Process(template, name, fn.split("-")[1]))
+
 
                 return Computer(name, processor, memory, processes)
         except ValueError as e:
@@ -201,6 +235,7 @@ def load_root_config():
                     if len(c.processes) == 0:
                         if c.can_run(t) and needToRun[t.name] >= 1:
                             c.add_process(Computer.Process(t, c.name))
+                            c.refresh_resources()
                             needToRun[t.name] -= 1
                             continue
                     for p in c.processes:
@@ -208,6 +243,7 @@ def load_root_config():
                             continue
                         if c.can_run(t) and needToRun[t.name] >= 1:
                             c.add_process(Computer.Process(t, c.name))
+                            c.refresh_resources()
                             needToRun[t.name] -= 1
                             continue
 
@@ -247,6 +283,7 @@ def position(args):
 @http_route("/api/refresh_computers")
 def rc(args):
     for c in Computer.COMPUTERS:
+
         send_to_client(json.dumps({"type": "addComputer", "name": c.name,
                                    "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
         for p in c.processes:
@@ -256,42 +293,45 @@ def rc(args):
                 "name": p.abstract.name,
                 "pid": p.process_id,
                 "mem": p.abstract.required_memory,
-                "proc": p.abstract.required_processor
+                "proc": p.abstract.required_processor,
+                "status": p.status == "AKTÍV"
             }))
 
     for t in ProcessAbstract.TEMPLATES:
         send_to_client(json.dumps({"type": "registerProcess", "name": t.name, "proc": t.required_processor, "mem": t.required_memory}))
     
 
-    return json_response({"response": True})
-
-@http_route("/api/add_to_computer")
-def start_process(args):
-    for c in Computer.COMPUTERS:
-        if c.name == args["pcName"]:
-            proc = Computer.Process(ProcessAbstract.get_process_template(args["appType"]), c.name)
-            c.add_process(proc)
-            proc.save()
-
-            return json_response({"status": True, "processId": proc.process_id})
-
-    return json_response({"status": False})
+    return json_response({"result": True})
 
 @http_route("/api/end_process")
 def end_process(args):
     for c in Computer.COMPUTERS:
         if c.name == args["pcName"]:
-            to_remove = []
-            for i, p in enumerate(c.processes):
-                if p.process_id == args["procName"]:
-                    c.end_process(i)
-                    to_remove.append(i)
+            to_remove = [p for p in c.processes if p.process_id == args["procName"]]
 
-            c.processes = [p for i, p in enumerate(c.processes) for tr in to_remove if i != tr]
+            for p in to_remove:
+                p.destroy()
+
+            c.processes = [p for p in c.processes if p.process_id != args["procName"]]
             c.refresh_resources()
-            return json_response({"status": True})
+            return json_response({"result": True, "mem": c.max_mem, "proc": c.max_proc, "umem": c.mem, "uproc": c.proc})
 
-    return json_response({"status": False})
+    return json_response({"result": False})
+
+@http_route("/api/add_to_computer")
+def start_process(args):
+    for c in Computer.COMPUTERS:
+        if c.name == args["pcName"]:
+            proc_template = ProcessAbstract.get_process_template(args["appType"])
+            if not proc_template or not c.can_run(proc_template):
+                return json_response({"result": False})
+
+            new_process = Computer.Process(proc_template, c.name)
+            c.processes.append(new_process)
+            c.refresh_resources()
+            return json_response({"result": True, "processId": new_process.process_id, "mem": c.max_mem,
+                                  "proc": c.max_proc, "umem": c.mem, "uproc": c.proc})
+    return json_response({"result": False})
 
 @http_route("/api/add_process")
 def add_process(args):
@@ -306,8 +346,10 @@ def add_process(args):
                 return json_response({"result": False})
 
             c.add_process(p)
+            c.refresh_resources()
 
-            return json_response({"result": True})
+            return json_response({"result": True, "mem": c.max_mem, "proc": c.max_proc,
+                                  "umem": c.mem, "uproc": c.proc})
 
     return json_response({"result": False})
 
@@ -323,6 +365,41 @@ def disable_process(args):
                     return json_response({"result": True})
 
     return json_response({"result": False})
+
+@http_route("/api/make_computer")
+def make_computer(args):
+    name = args["name"]
+    mem = int(args["mem"])
+    proc = int(args["proc"])
+
+    try:
+        c = Computer(name, proc, mem, [])
+        c.save()
+        return json_response({"result": True, "mem": mem, "proc": proc})
+    except Exception:
+        return json_response({"result": False})
+
+@http_route("/api/remove")
+def remove(args):
+    rindex = 0
+    for i, c in enumerate(Computer.COMPUTERS):
+        if c.name == args["elementName"]:
+            rindex = i
+            break
+
+    try:
+        c = Computer.COMPUTERS[rindex]
+        if len(c.processes) > 0:
+            return {"result": False, "reason": "Close all applications"}
+
+        for f in os.listdir(c.path):
+            os.remove(os.path.join(c.path, f))
+
+        os.rmdir(c.path)
+        del Computer.COMPUTERS[rindex]
+    except PermissionError:
+        # Nothing can be done
+        pass
 
 # webbrowser.open("http://localhost:8080")
 start_server(ADDRESS, PORT)

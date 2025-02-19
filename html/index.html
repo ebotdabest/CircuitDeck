@@ -13,7 +13,6 @@
   </head>
   <body>
     {{ add_signals() }}
-
     <script type="module" defer>
       import { send_to_server } from "/scripts/signals.js";
       import { makeCards } from "/scripts/scripts.js";
@@ -47,12 +46,18 @@
             ep.setAttribute("parent", command.cname)
             ep.classList.remove("node")
             ep.classList.add("node2", "inside")
+            if (!command.status) {
+              ep.classList.add("inactive")
+            }
             ep.querySelector('[name="proc-id"]').textContent = `Process ID: ${command.pid}`
             document.querySelector(`[name="${command.cname}"]`).querySelector("#process-holder").appendChild(ep)
             turnInsiderNode(ep)
             break
+          case "logError":
+            
+
+            break;
         }
-        makePowerButtonsAgain()
       });
     </script>
     <div id="workspaces-wrap">

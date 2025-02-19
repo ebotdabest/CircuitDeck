@@ -2,72 +2,47 @@ import { send_to_server } from "./signals.js";
 
 class DragableCard {
   constructor(cardElement) {
-    try {
-      this.card = cardElement;
-      this.isDragging = false;
-      this.offsetX = 0;
-      this.offsetY = 0;
-
-      this.initEvents();
-      console.log("DragableCard inited for:", this.card);
-    } catch (error) {
-      console.error("Error in initing:", error);
-    }
+    this.card = cardElement;
+    this.isDragging = false;
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.initEvents();
   }
 
   initEvents() {
-    if (!this.card) {
-      console.error("Card element is not found");
-      return;
-    }
+    if (!this.card) return;
     this.card.addEventListener("mousedown", (e) => this.startDragging(e));
     document.addEventListener("mousemove", (e) => this.drag(e));
     document.addEventListener("mouseup", () => this.stopDragging());
     this.card.addEventListener("touchstart", (e) => this.startDragging(e));
     document.addEventListener("touchmove", (e) => this.drag(e));
     document.addEventListener("touchend", () => this.stopDragging());
-    console.log("Events added to:", this.card);
   }
 
   startDragging(e) {
-    try {
-      this.isDragging = true;
-      this.card.style.zIndex = 1000;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const rect = this.card.getBoundingClientRect();
-      this.offsetX = clientX - rect.left;
-      this.offsetY = clientY - rect.top;
-      console.log("Drag started:", { clientX, clientY, rect });
-      if (e.touches) e.preventDefault();
-    } catch (error) {
-      console.error("Error in startDragging:", error);
-    }
+    if (e.target.closest(".power")) return;
+    this.isDragging = true;
+    this.card.style.zIndex = 1000;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rect = this.card.getBoundingClientRect();
+    this.offsetX = clientX - rect.left;
+    this.offsetY = clientY - rect.top;
+    if (e.touches) e.preventDefault();
   }
 
   drag(e) {
     if (!this.isDragging) return;
-    try {
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = clientX - this.offsetX;
-      const y = clientY - this.offsetY;
-      this.card.style.left = x + "px";
-      this.card.style.top = y + "px";
-      if (e.touches) e.preventDefault();
-    } catch (error) {
-      console.error("Error in drag:", error);
-    }
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    this.card.style.left = `${clientX - this.offsetX}px`;
+    this.card.style.top = `${clientY - this.offsetY}px`;
+    if (e.touches) e.preventDefault();
   }
 
   stopDragging() {
-    try {
-      this.isDragging = false;
-      this.card.style.zIndex = 1;
-      console.log("Drag stopped");
-    } catch (error) {
-      console.error("Error in stopDragging:", error);
-    }
+    this.isDragging = false;
+    this.card.style.zIndex = 1;
   }
 }
 
@@ -80,7 +55,7 @@ class DragableNode {
       this.offsetY = 0;
 
       this.initEvents();
-      console.log("DragableNode inited for:", this.node);
+      // console.log("DragableNode inited for:", this.node);
     } catch (error) {
       console.error("Error in initing:", error);
     }
@@ -97,7 +72,7 @@ class DragableNode {
     this.node.addEventListener("touchstart", (e) => this.startDragging(e));
     document.addEventListener("touchmove", (e) => this.drag(e));
     document.addEventListener("touchend", () => this.stopDragging());
-    console.log("Events added to:", this.node);
+    // console.log("Events added to:", this.node);
   }
 
   startDragging(e) {
@@ -109,7 +84,7 @@ class DragableNode {
       const rect = this.node.getBoundingClientRect();
       this.offsetX = clientX - rect.left;
       this.offsetY = clientY - rect.top;
-      console.log("Drag started:", { clientX, clientY, rect });
+      // console.log("Drag started:", { clientX, clientY, rect });
       if (e.touches) e.preventDefault();
     } catch (error) {
       console.error("Error in startDragging:", error);
@@ -135,7 +110,7 @@ class DragableNode {
     try {
       this.isDragging = false;
       this.node.style.zIndex = 2;
-      console.log("Drag stopped");
+      // console.log("Drag stopped");
     } catch (error) {
       console.error("Error in stopDragging:", error);
     }
@@ -143,13 +118,13 @@ class DragableNode {
 }
 
 export function makeCards() {
-  console.log("Ininiting dragable cards.");
+  // console.log("Ininiting dragable cards.");
   try {
     const cards = document.querySelectorAll(".card");
-    console.log("Found cards:", cards.length);
+    // console.log("Found cards:", cards.length);
     cards.forEach((card, index) => {
       new DragableCard(card);
-      console.log("Init card:", index + 1, card);
+      // console.log("Init card:", index + 1, card);
     });
   } catch (error) {
     console.error("Error in initDraggableCards:", error);
@@ -157,13 +132,13 @@ export function makeCards() {
 }
 
 export function makeNodes() {
-  console.log("Ininiting dragable nodes.");
+  // console.log("Ininiting dragable nodes.");
   try {
     const nodes = document.querySelectorAll(".node");
-    console.log("Found nodes:", nodes.length);
+    // console.log("Found nodes:", nodes.length);
     nodes.forEach((node, index) => {
       new DragableNode(node);
-      console.log("Init node:", index + 1, node);
+      // console.log("Init node:", index + 1, node);
     });
   } catch (error) {
     console.error("Error in initDraggableNodes:", error);
@@ -218,7 +193,7 @@ function setActiveWorkspace(workspaceButton) {
 
   workspaceContent.style.display = "block";
   activeWorkspaceId = workspaceId;
-  console.log(`Active workspace set to: ${workspaceId}`);
+  // console.log(`Active workspace set to: ${workspaceId}`);
 }
 
 workspacesContainer.addEventListener("click", function (event) {
@@ -265,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (initialWorkspaceButton) {
     setActiveWorkspace(initialWorkspaceButton);
   } else {
-    console.log("No initial workspaces found.");
+    // console.log("No initial workspaces found.");
   }
 });
 
@@ -335,8 +310,10 @@ function startDeleteTimer(element) {
       element.remove();
       deleteTimers.delete(element);
       const elementElement = element.querySelector('[name="name"]');
-      const elementName = elementElement ? elementElement.textContent : "Element name not found!";
-      send_to_server("/api/remove", {elementName}, () => {});
+      const elementName = elementElement
+        ? elementElement.textContent
+        : "Element name not found!";
+      send_to_server("/api/remove", { elementName }, () => {});
     }, 1500);
     deleteTimers.set(element, timer);
   }
@@ -389,40 +366,34 @@ export function turnInsiderNode(e) {
     e.style.top = y + "px";
     makeNodes();
 
-    send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, () => {})
+    send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, (data) => {
+      if (data.result) {
+        e.classList.remove("node2", "inside");
+        e.classList.add("node");
+        e.style.left = `${ev.clientX}px`;
+        e.style.top = `${ev.clientY}px`;
 
+        const parent = document.querySelector(`[name="${e.getAttribute('parent')}"`);
+        parent.querySelector('[name="proc"]').innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
+        parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`;
+
+        makeNodes();
+        e.removeEventListener("click", handleEv);
+      }
+    });
+
+    e.getAttribute("proc");
     e.removeEventListener("click", handleEv);
   };
-  e.addEventListener("click", handleEv);
+
+  e.querySelector('[class="power"]').onclick = handleEvPower;
+  e.addEventListener("click", handleEv, { once: true });
 }
+
 
 export function makeNode2() {
   document.querySelectorAll(".node2").forEach((e) => {
-    const handleEv = (ev) => {
-      e.classList.remove("node2");
-      e.classList.remove("inside");
-      const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
-      const activeWorkspaceContent = document.getElementById(
-        activeWorkspaceContentId
-      );
-      if (activeWorkspaceContent) {
-        activeWorkspaceContent.appendChild(e);
-      }
-      e.classList.add("node");
-      const clientX = ev.touchevs ? ev.touches[0].clientX : ev.clientX;
-      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-      const x = clientX;
-      const y = clientY;
-      e.style.left = x + "px";
-      e.style.top = y + "px";
-      makeNodes();
-
-      send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, () => {})
-
-      e.getAttribute("proc")
-      e.removeEventListener("click", handleEv);
-    };
-    e.addEventListener("click", handleEv);
+    turnInsiderNode(e)
   });
 }
 
@@ -440,41 +411,124 @@ function isOverlapping(rect1, rect2) {
   );
 }
 
+// function addToPC(card, app) {
+//   console.log("addToPC called with card:", card, "and app:", app);
+//   const clone = app.cloneNode(true);
+//   clone.classList.remove("node");
+//   clone.classList.add("node2", "inside");
+//   clone.style.outline = "";
+
+//   app.remove();
+//   const processHolder = card.querySelector("#process-holder");
+//   if (processHolder) {
+//     clone.id = "copy-process";
+//     processHolder.appendChild(clone);
+//     const cardNameElement = card.querySelector('[name="name"]');
+//     const cardName = cardNameElement
+//       ? cardNameElement.textContent
+//       : "Card Name Not Found";
+//     console.log(cardName);
+//     const appNameElement = clone.querySelector('[name="name"]');
+//     const appName = appNameElement
+//       ? appNameElement.textContent
+//       : "App Name Not Found";
+//     if (clone.hasAttribute("proc")) {
+//       send_to_server(
+//         "/api/add_process",
+//         {
+//           pcName: cardName,
+//           appType: appName,
+//           appId: clone.getAttribute("proc"),
+//           status: clone.classList.contains("inactive") ? "i" : "a",
+//         },
+//         (data) => {
+//           clone.setAttribute("parent", cardName);
+//         }
+//       );
+//     } else {
+//       send_to_server(
+//         "/api/add_to_computer",
+//         { pcName: cardName, appType: appName },
+//         (data) => {
+//           clone.setAttribute("proc", data.processId);
+//           clone.setAttribute("parent", cardName);
+//           clone.querySelector(
+//             '[name="proc-id"]'
+//           ).textContent = `Process ID: ${data.processId}`;
+//         }
+//       );
+//     }
+
+//     processHolder.querySelector('[class="power"]').onclick = handleEv;
+//     makeNode2();
+//   } else {
+//     console.error("No element with ID 'process-holder' found inside the card.");
+//   }
+// }
+
 function addToPC(card, app) {
-  console.log("addToPC called with card:", card, "and app:", app);
+  // console.log("addToPC called with card:", card, "and app:", app);
   const clone = app.cloneNode(true);
   clone.classList.remove("node");
   clone.classList.add("node2", "inside");
   clone.style.outline = "";
+
   app.remove();
   const processHolder = card.querySelector("#process-holder");
   if (processHolder) {
     clone.id = "copy-process";
-    processHolder.appendChild(clone);
     const cardNameElement = card.querySelector('[name="name"]');
-    const cardName = cardNameElement ? cardNameElement.textContent : "Card Name Not Found";
-    console.log(cardName)
+    const cardName = cardNameElement
+      ? cardNameElement.textContent
+      : "Card Name Not Found";
+    // console.log(cardName);
     const appNameElement = clone.querySelector('[name="name"]');
-    const appName = appNameElement ? appNameElement.textContent : "App Name Not Found";
+    const appName = appNameElement
+      ? appNameElement.textContent
+      : "App Name Not Found";
+
+    const onSuccess = (data) => {
+      if (data.result) {
+        processHolder.appendChild(clone);
+        clone.setAttribute("parent", cardName);
+        const parent = clone.parentNode.parentNode
+        parent.querySelector('[name="proc"').innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
+        parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`;
+        if (data.processId) {
+          clone.setAttribute("proc", data.processId);
+          clone.querySelector(
+            '[name="proc-id"]'
+          ).textContent = `Process ID: ${data.processId}`;
+        }
+        turnInsiderNode(clone)
+      } else {
+        console.warn("Server response did not confirm success:", data);
+      }
+    };
+
     if (clone.hasAttribute("proc")) {
-      send_to_server("/api/add_process", {pcName: cardName, appType: appName, appId: clone.getAttribute("proc"),
-        status: "a"
-      }, (data) => {
-        clone.setAttribute("parent", cardName)
-      })
-    }else {
-      send_to_server("/api/add_to_computer", { pcName: cardName, appType: appName }, (data) => {
-        clone.setAttribute("proc", data.processId)
-        clone.setAttribute("parent", cardName)
-        clone.querySelector('[name="proc-id"]').textContent = `Process ID: ${data.processId}`
-      });
+      send_to_server(
+        "/api/add_process",
+        {
+          pcName: cardName,
+          appType: appName,
+          appId: clone.getAttribute("proc"),
+          status: clone.classList.contains("inactive") ? "i" : "a",
+        },
+        onSuccess
+      );
+    } else {
+      send_to_server(
+        "/api/add_to_computer",
+        { pcName: cardName, appType: appName },
+        onSuccess
+      );
     }
-    
-    makeNode2();
   } else {
     console.error("No element with ID 'process-holder' found inside the card.");
   }
 }
+
 
 function checkAndAdd() {
   const cards = document.querySelectorAll(".card");
@@ -488,7 +542,7 @@ function checkAndAdd() {
     cards.forEach((card) => {
       const cardRect = card.getBoundingClientRect();
       if (isOverlapping(cardRect, nodeRect)) {
-        console.log("Node overlaps with card:", node, card);
+        // console.log("Node overlaps with card:", node, card);
         overlapsWithAnyCard = true;
 
         if (!overlapStartTimes.has(node)) {
@@ -550,20 +604,20 @@ pcButton.addEventListener("click", function () {
 
 export function createCardDiv(data) {
   const cardDiv = document.createElement("div");
-  
-  cardDiv.setAttribute("name", data.name)
+
+  cardDiv.setAttribute("name", data.name);
 
   const h2Element = document.createElement("h2");
-  h2Element.setAttribute("name", "name")
+  h2Element.setAttribute("name", "name");
   h2Element.textContent = data.name;
 
   const procParagraph = document.createElement("p");
-  procParagraph.setAttribute("name", "proc")
-  procParagraph.textContent = "Processor: " + data.proc;
+  procParagraph.setAttribute("name", "proc");
+  procParagraph.innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`
 
   const memParagraph = document.createElement("p");
-  memParagraph.setAttribute("name", "mem")
-  memParagraph.textContent = "Memory: " + data.mem;
+  memParagraph.setAttribute("name", "mem");
+  memParagraph.innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`
 
   const processHolderDiv = document.createElement("div");
   processHolderDiv.id = "process-holder";
@@ -572,9 +626,30 @@ export function createCardDiv(data) {
   cardDiv.appendChild(procParagraph);
   cardDiv.appendChild(memParagraph);
   cardDiv.appendChild(processHolderDiv);
-  
+
   return cardDiv;
 }
+
+export const handleEvPower = (e) => {
+  e.stopPropagation();
+  const powerButton = e.target;
+  send_to_server(
+    "/api/swap_process",
+    {
+      procId: powerButton.parentNode.getAttribute("proc"),
+      pcName: powerButton.parentNode.getAttribute("parent"),
+    },
+    () => {}
+  );
+  if (!powerButton.parentNode.classList.contains("inactive")) {
+    powerButton.parentNode.classList.add("inactive");
+  } else {
+    powerButton.parentNode.classList.remove("inactive");
+  }
+
+  e.preventDefault();
+  e.stopImmediatePropagation();
+};
 
 export function createNodeDiv(data) {
   const processDiv = document.createElement("div");
@@ -587,30 +662,31 @@ export function createNodeDiv(data) {
   imgElement.alt = data.imageAlt || "Process Icon";
 
   const h2Element = document.createElement("h2");
-  h2Element.setAttribute("name", "name")
+  h2Element.setAttribute("name", "name");
   h2Element.textContent = data.name;
 
-  const procParagraph = document.createElement("p")
-  procParagraph.setAttribute("name", "proc-id")
-  procParagraph.classList.add("proc-id")
+  const procParagraph = document.createElement("p");
+  procParagraph.setAttribute("name", "proc-id");
+  procParagraph.classList.add("proc-id");
 
   const memoryParagraph = document.createElement("p");
   memoryParagraph.classList.add("memory");
-  memoryParagraph.setAttribute("name", "mem")
+  memoryParagraph.setAttribute("name", "mem");
   memoryParagraph.textContent = "Memory used: " + data.mem;
 
   const cpuParagraph = document.createElement("p");
   cpuParagraph.classList.add("cpu");
-  cpuParagraph.setAttribute("name", "proc")
+  cpuParagraph.setAttribute("name", "proc");
   cpuParagraph.textContent = "CPU used: " + data.proc;
 
   const powerButton = document.createElement("button");
   powerButton.classList.add("power");
   powerButton.textContent = "❌";
+  powerButton.onclick = handleEvPower;
 
   processDiv.appendChild(imgElement);
   processDiv.appendChild(h2Element);
-  processDiv.appendChild(procParagraph)
+  processDiv.appendChild(procParagraph);
   processDiv.appendChild(memoryParagraph);
   processDiv.appendChild(cpuParagraph);
   processDiv.appendChild(powerButton);
@@ -619,18 +695,25 @@ export function createNodeDiv(data) {
 }
 
 function makePC(name, mem, proc) {
-  const pcs = document.querySelector('.items-pc')
-  send_to_server("/api/make_computer", { name: name, mem: mem, proc: proc*100}, () => {});
-  const data = {name: name, mem:mem, proc: proc*100}
-  var pc = createCardDiv(data)
-  pc.classList.add('duplicateable-pc')
-  pcs.appendChild(pc);
-  }
-
+  const space = document.querySelector(".container");
+  send_to_server(
+    "/api/make_computer",
+    { name: name, mem: mem, proc: proc * 100 },
+    () => {
+      const data = { name: name, mem: mem, proc: proc * 100, umem: mem, uproc: proc * 100 };
+      var pc = createCardDiv(data);
+      pc.classList.add("card");
+      pc.id = "copy";
+      
+      space.appendChild(pc);
+      makeCards()
+    }
+  );
+}
 
 const form2 = document.getElementById("pc-form");
-  form2.addEventListener("submit", function (event) {
-  event.preventDefault(); 
+form2.addEventListener("submit", function (event) {
+  event.preventDefault();
   const name = form2.querySelector("#pc-name").value.trim();
   const memory = form2.querySelector("#memory-slider").value;
   const cores = form2.querySelector("#cores-slider").value;
@@ -644,24 +727,3 @@ const form2 = document.getElementById("pc-form");
     form2.reset();
   }
 });
-
-export function makePowerButtonsAgain() {
-  document.querySelectorAll(".power").forEach(powerButton => {
-    const handleEv = (e) => {
-      e.stopPropagation()
-      send_to_server("/api/swap_process", {procId: powerButton.parentNode.getAttribute("proc"), pcName: powerButton.parentNode.getAttribute("parent")}, () => {})
-      if (!powerButton.parentNode.classList.contains("inactive")) {
-        powerButton.parentNode.classList.add("inactive")
-      }else {
-        powerButton.parentNode.classList.remove("inactive")
-      }
-    }
-    try {
-      powerButton.removeEventListener("click", handleEv)
-
-    }catch {
-      // It doesn't exist
-    }
-    powerButton.addEventListener("click", handleEv)
-  })
-}
