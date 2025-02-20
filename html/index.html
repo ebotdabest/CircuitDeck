@@ -20,6 +20,7 @@
       import { turnInsiderNode } from "/scripts/scripts.js";
       import { createCardDiv } from "/scripts/scripts.js"
       import { createNodeDiv } from "/scripts/scripts.js"
+      import { makeError } from "/scripts/scripts.js"
 
       document.body.addEventListener("serverOpen", () => {
         send_to_server("/api/refresh_computers", {}, () => {});
@@ -37,6 +38,7 @@
             break;
           case "registerProcess":
             const clone2 = createNodeDiv(command)
+            clone2.setAttribute("indentifier", command.name)
             document.querySelectorAll(".items-app")[0].appendChild(clone2);
             clone2.classList.add("duplicateable-app");
             break
@@ -44,6 +46,7 @@
             const ep = createNodeDiv(command)
             ep.setAttribute("proc", command.pid)
             ep.setAttribute("parent", command.cname)
+            ep.setAttribute("indentifier", command.name)
             ep.classList.remove("node")
             ep.classList.add("node2", "inside")
             if (!command.status) {
@@ -54,13 +57,20 @@
             turnInsiderNode(ep)
             break
           case "logError":
-            
-
+            console.log(command)
+            makeError(command);
+            break;
+          case "clearLog":
+            console.log("clearing")
+            for (const child of document.querySelector(".items-pc").children)  {
+              child.remove()
+            }
             break;
         }
       });
     </script>
-    <div id="workspaces-wrap">
+
+    <div id="workspaces-wrap" style="visibility: hidden;">
       <div id="workspace-create-ui">
         <h2>Create workspace</h2>
         <form id="workspace-form">
@@ -83,6 +93,7 @@
       <button id="menu-button">◀</button>
       <button id="button-pc" type="button">Create PC</button>
       <div class="items-pc">
+        
       </div>
       <div class="items-app"></div>
     </div>

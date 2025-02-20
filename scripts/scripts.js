@@ -307,13 +307,18 @@ function startDeleteTimer(element) {
   if (!deleteTimers.has(element) && !element.isDragging) {
     element.style.outline = "2px solid red";
     const timer = setTimeout(() => {
-      element.remove();
       deleteTimers.delete(element);
       const elementElement = element.querySelector('[name="name"]');
       const elementName = elementElement
         ? elementElement.textContent
         : "Element name not found!";
-      send_to_server("/api/remove", { elementName }, () => {});
+      send_to_server("/api/remove", { elementName }, (data) => {
+        if (data.result) {
+          element.remove();
+        } else {
+          alert(data.reason);
+        }
+      });
     }, 1500);
     deleteTimers.set(element, timer);
   }
@@ -366,21 +371,35 @@ export function turnInsiderNode(e) {
     e.style.top = y + "px";
     makeNodes();
 
-    send_to_server("/api/end_process", {pcName: e.getAttribute("parent"), procName: e.getAttribute("proc")}, (data) => {
-      if (data.result) {
-        e.classList.remove("node2", "inside");
-        e.classList.add("node");
-        e.style.left = `${ev.clientX}px`;
-        e.style.top = `${ev.clientY}px`;
+    send_to_server(
+      "/api/end_process",
+      { pcName: e.getAttribute("parent"), procName: e.getAttribute("proc") },
+      (data) => {
+        if (data.result) {
+          e.classList.remove("node2", "inside");
+          e.classList.add("node");
+          e.style.left = `${ev.clientX}px`;
+          e.style.top = `${ev.clientY}px`;
 
-        const parent = document.querySelector(`[name="${e.getAttribute('parent')}"`);
-        parent.querySelector('[name="proc"]').innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
-        parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`;
+          const parent = document.querySelector(
+            `[name="${e.getAttribute("parent")}"`
+          );
+          parent.querySelector('[name="proc"]').innerHTML = `Processor: <prc>${
+            data.uproc
+          }</prc>/${data.proc} (${
+            parseInt(data.proc) - parseInt(data.uproc)
+          } used)`;
+          parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${
+            data.umem
+          }</prc>/${data.mem} (${
+            parseInt(data.mem) - parseInt(data.umem)
+          } used)`;
 
-        makeNodes();
-        e.removeEventListener("click", handleEv);
+          makeNodes();
+          e.removeEventListener("click", handleEv);
+        }
       }
-    });
+    );
 
     e.getAttribute("proc");
     e.removeEventListener("click", handleEv);
@@ -390,10 +409,9 @@ export function turnInsiderNode(e) {
   e.addEventListener("click", handleEv, { once: true });
 }
 
-
 export function makeNode2() {
   document.querySelectorAll(".node2").forEach((e) => {
-    turnInsiderNode(e)
+    turnInsiderNode(e);
   });
 }
 
@@ -491,16 +509,22 @@ function addToPC(card, app) {
       if (data.result) {
         processHolder.appendChild(clone);
         clone.setAttribute("parent", cardName);
-        const parent = clone.parentNode.parentNode
-        parent.querySelector('[name="proc"').innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
-        parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`;
+        const parent = clone.parentNode.parentNode;
+        parent.querySelector('[name="proc"').innerHTML = `Processor: <prc>${
+          data.uproc
+        }</prc>/${data.proc} (${
+          parseInt(data.proc) - parseInt(data.uproc)
+        } used)`;
+        parent.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${
+          data.umem
+        }</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`;
         if (data.processId) {
           clone.setAttribute("proc", data.processId);
           clone.querySelector(
             '[name="proc-id"]'
           ).textContent = `Process ID: ${data.processId}`;
         }
-        turnInsiderNode(clone)
+        turnInsiderNode(clone);
       } else {
         console.warn("Server response did not confirm success:", data);
       }
@@ -528,7 +552,6 @@ function addToPC(card, app) {
     console.error("No element with ID 'process-holder' found inside the card.");
   }
 }
-
 
 function checkAndAdd() {
   const cards = document.querySelectorAll(".card");
@@ -613,11 +636,15 @@ export function createCardDiv(data) {
 
   const procParagraph = document.createElement("p");
   procParagraph.setAttribute("name", "proc");
-  procParagraph.innerHTML = `Processor: <prc>${data.uproc}</prc>/${data.proc} (${parseInt(data.proc) - parseInt(data.uproc)} used)`
+  procParagraph.innerHTML = `Processor: <prc>${data.uproc}</prc>/${
+    data.proc
+  } (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
 
   const memParagraph = document.createElement("p");
   memParagraph.setAttribute("name", "mem");
-  memParagraph.innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${parseInt(data.mem) - parseInt(data.umem)} used)`
+  memParagraph.innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${
+    parseInt(data.mem) - parseInt(data.umem)
+  } used)`;
 
   const processHolderDiv = document.createElement("div");
   processHolderDiv.id = "process-holder";
@@ -633,23 +660,59 @@ export function createCardDiv(data) {
 export const handleEvPower = (e) => {
   e.stopPropagation();
   const powerButton = e.target;
-  send_to_server(
-    "/api/swap_process",
-    {
-      procId: powerButton.parentNode.getAttribute("proc"),
-      pcName: powerButton.parentNode.getAttribute("parent"),
-    },
-    () => {}
-  );
-  if (!powerButton.parentNode.classList.contains("inactive")) {
-    powerButton.parentNode.classList.add("inactive");
+  if (powerButton.parentNode.classList.contains("duplicateable-app")) {
+    showConfirm("Are you sure?", "You want to kill all Instances?", (r) => {
+      if (r) {
+        send_to_server("/api/kill_all_instance", {processName: powerButton.parentNode.getAttribute("indentifier")}, () => {
+          const workspaceContent = document.querySelector(".workspace-content");
+          const children = [...workspaceContent.children];
+        
+          for (let i = children.length - 1; i >= 0; i--) {
+            if (!children[i].hasAttribute("indentifier")) {
+              console.log(children[i]);
+              children[i].remove();
+            }
+          }
+
+          setTimeout(() => {
+            send_to_server("/api/refresh_computers", {pconly: true}, () => {
+              showAlert("Kill success", "Killed all process of this type!");
+            });
+          }, 0)
+        });        
+        
+      }
+    });
   } else {
-    powerButton.parentNode.classList.remove("inactive");
+    send_to_server(
+      "/api/swap_process",
+      {
+        procId: powerButton.parentNode.getAttribute("proc"),
+        pcName: powerButton.parentNode.getAttribute("parent"),
+      },
+      () => {}
+    );
+    if (!powerButton.parentNode.classList.contains("inactive")) {
+      powerButton.parentNode.classList.add("inactive");
+    } else {
+      powerButton.parentNode.classList.remove("inactive");
+    }
   }
 
   e.preventDefault();
   e.stopImmediatePropagation();
 };
+
+export const handleSettingsBtn = (e) => {
+  e.stopPropagation()
+
+  const settingsButton = e.target;
+  const parent = settingsButton.parentNode
+
+  makeAllocateOverlay(parent.getAttribute("indentifier"), parent.getAttribute("proc"), 0, 0, (p, m) => {
+    console.log(p, m)
+  })
+}
 
 export function createNodeDiv(data) {
   const processDiv = document.createElement("div");
@@ -684,12 +747,18 @@ export function createNodeDiv(data) {
   powerButton.textContent = "❌";
   powerButton.onclick = handleEvPower;
 
+  const settingsButton = document.createElement("button")
+  settingsButton.classList.add("settings-btn")
+  settingsButton.textContent = "⚙";  
+  settingsButton.onclick = handleSettingsBtn
+
   processDiv.appendChild(imgElement);
   processDiv.appendChild(h2Element);
   processDiv.appendChild(procParagraph);
-  processDiv.appendChild(memoryParagraph);
   processDiv.appendChild(cpuParagraph);
+  processDiv.appendChild(memoryParagraph);
   processDiv.appendChild(powerButton);
+  processDiv.appendChild(settingsButton);
 
   return processDiv;
 }
@@ -700,13 +769,19 @@ function makePC(name, mem, proc) {
     "/api/make_computer",
     { name: name, mem: mem, proc: proc * 100 },
     () => {
-      const data = { name: name, mem: mem, proc: proc * 100, umem: mem, uproc: proc * 100 };
+      const data = {
+        name: name,
+        mem: mem,
+        proc: proc * 100,
+        umem: mem,
+        uproc: proc * 100,
+      };
       var pc = createCardDiv(data);
       pc.classList.add("card");
       pc.id = "copy";
-      
+
       space.appendChild(pc);
-      makeCards()
+      makeCards();
     }
   );
 }
@@ -727,3 +802,155 @@ form2.addEventListener("submit", function (event) {
     form2.reset();
   }
 });
+
+const generateMessage = (name, difference) => {
+  let word1;
+  difference *= -1;
+  if (difference > 0) {
+    word1 = "many";
+  } else if (difference < 0) {
+    word1 = "few";
+  }
+
+  return `Application ${name} has too ${word1} instances running (${Math.abs(
+    difference
+  )})!`;
+};
+
+let errors = {};
+export function makeError(issue) {
+  const message = generateMessage(issue.app, issue.difference);
+  errors[issue.app] = message;
+  const element = document.createElement("div");
+  element.classList.add("error");
+  element.id = `${issue.app}`;
+  element.innerHTML = message;
+  document.querySelector(".items-pc").appendChild(element);
+}
+
+export function showAlert(title, message) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.classList.add("popup-overlay");
+
+    const popup = document.createElement("div");
+    popup.classList.add("popup-box");
+
+    const popupTitle = document.createElement("h2");
+    popupTitle.innerText = title;
+    popup.appendChild(popupTitle);
+
+    const popupMessage = document.createElement("p");
+    popupMessage.innerText = message;
+    popup.appendChild(popupMessage);
+
+    const okButton = document.createElement("button");
+    okButton.innerText = "OK";
+    okButton.classList.add("popup-button");
+    okButton.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve();
+    };
+    popup.appendChild(okButton);
+
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+  });
+}
+
+export function showConfirm(title, message, callback) {
+  const overlay = document.createElement("div");
+  overlay.classList.add("popup-overlay");
+
+  const popup = document.createElement("div");
+  popup.classList.add("popup-box");
+
+  const popupTitle = document.createElement("h2");
+  popupTitle.innerText = title;
+  popup.appendChild(popupTitle);
+
+  const popupMessage = document.createElement("p");
+  popupMessage.innerText = message;
+  popup.appendChild(popupMessage);
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("popup-button-container");
+
+  const yesButton = document.createElement("button");
+  yesButton.innerText = "Yes";
+  yesButton.classList.add("popup-button", "popup-button-yes");
+  yesButton.onclick = () => {
+    document.body.removeChild(overlay);
+    callback(true);
+  };
+
+  const noButton = document.createElement("button");
+  noButton.innerText = "No";
+  noButton.classList.add("popup-button", "popup-button-no");
+  noButton.onclick = () => {
+    document.body.removeChild(overlay);
+    callback(false);
+  };
+
+  buttonContainer.appendChild(yesButton);
+  buttonContainer.appendChild(noButton);
+  popup.appendChild(buttonContainer);
+
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+}
+
+
+function makeAllocateOverlay(type, id, mem, proc, callback) {
+  const outline = document.createElement("div")
+  outline.classList.add("popup-overlay")
+
+  const box = document.createElement("div")
+  box.classList.add("popup-box")
+
+  const title = document.createElement("h1")
+  title.textContent = `Allocation for ${type}-${id}`
+
+  const form = document.createElement("form")
+  const p1 = document.createElement("p")
+  p1.textContent = "Processor: "
+
+  const p2 = document.createElement("p")
+  p2.textContent = "Memory: "
+  const procInput = document.createElement("input")
+  procInput.type = "number"
+  procInput.value = proc
+
+  const memInput = document.createElement("input")
+  memInput.type = "number"
+  memInput.value = mem
+
+  const confirmBtn = document.createElement("input")
+  confirmBtn.type = "submit"
+  confirmBtn.classList.add("popup-button", "popup-button-yes")
+  confirmBtn.value = "Confirm"
+
+  const cancelBtn = document.createElement("button")
+  cancelBtn.classList.add("popup-button", "popup-button-no")
+  cancelBtn.textContent = "Cancel"
+
+  form.onsubmit = (e) => {
+    e.preventDefault()
+    callback(procInput.value, memInput.value)
+  }
+
+  cancelBtn.onclick = () => outline.remove()
+
+  form.appendChild(p1)
+  form.appendChild(procInput)
+  form.appendChild(p2)
+  form.appendChild(memInput)
+  form.appendChild(document.createElement("br"))
+  form.appendChild(confirmBtn)
+  form.appendChild(cancelBtn)
+  box.appendChild(title)
+  box.appendChild(form)
+  outline.appendChild(box)
+
+  document.body.appendChild(outline)
+}

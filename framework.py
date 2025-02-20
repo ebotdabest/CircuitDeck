@@ -11,6 +11,7 @@ import re
 def http_route(path):
     def wrapper(func):
         CustomHandler.ADD_ROUTE(path, func)
+        return func
 
     return wrapper
 

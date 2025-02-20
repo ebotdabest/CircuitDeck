@@ -52,15 +52,35 @@ body {
 
 .items-pc {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   position: relative;
   width: 100%;
   height: 60%;
   padding-top: 5px;
   padding-left: 5px;
-  overflow-x: scroll;
-  overflow-y: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.error {
+  display: flex;
+  flex: 1;
+  flex-grow: 1;
+  width: auto;
+  max-width: 96%;
+  max-height: 5%;
+  flex-direction: column;
+  background-color: rgb(77, 54, 43);
+  color: rgb(255, 204, 204);
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  border: 2px solid red;
+  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
 }
 
 .items-app {
@@ -187,7 +207,7 @@ p,
 .inside .cpu {
   font-size: 15px;
   grid-column: 1 / 4;
-  grid-row: 3;
+  grid-row: 2;
   margin: 0;
   background-color: burlywood;
   margin-bottom: 5px;
@@ -196,14 +216,15 @@ p,
 .node .memory,
 .inside .memory {
   grid-column: 1 / 4;
-  grid-row: 2;
+  grid-row: 3;
   font-size: 15px;
   margin: 0;
   background-color: burlywood;
 }
 
 .node .power,
-.inside .power {
+.inside .power,
+.settings-btn {
   font-size: 20px;
   grid-column: 5;
   grid-row: 3;
@@ -216,6 +237,11 @@ p,
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.settings-btn {
+  grid-column: 5;
+  grid-row: 2;
 }
 
 .duplicateable-app {
@@ -438,9 +464,22 @@ img {
   background-color: rgb(222, 184, 135) !important;
 }
 
+.inside > .settings-btn {
+  visibility: visible;
+}
+
+.settings-btn {
+  visibility: hidden;
+}
+
 .power:hover {
   color: rgb(215, 82, 82);
   outline: rgb(215, 82, 82) solid 2px;
+}
+
+.settings-btn:hover {
+  color: rgb(57, 57, 232);
+  outline: rgb(57, 57, 232) solid 2px;
 }
 
 .inactive {
@@ -462,21 +501,111 @@ prc {
   text-decoration: underline;
 }
 
-#process-holder::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 10px;
 }
 
-#process-holder::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: burlywood;
   border-radius: 10px;
 }
 
-#process-holder::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: black;
   border-radius: 10px;
   border: 2px solid burlywood;
 }
 
-#process-holder::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: rgb(77, 54, 43);
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-box {
+  background: burlywood;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  min-width: 300px;
+}
+
+.popup-button-container {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.popup-button {
+  padding: 5px 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background: bisque;
+  font-size: 16px;
+}
+
+.popup-button:hover {
+  background: rgb(214, 190, 150);
+}
+
+.popup-button-yes {
+  background: lightgreen;
+}
+
+.popup-button-no {
+  background: lightcoral;
+}
+
+.popup-button-yes:hover {
+  background: green;
+  color: white;
+}
+
+.popup-button-no:hover {
+  background: red;
+  color: white;
+}
+
+
+input[type="number"] {
+  background-color: bisque;
+  color: black;
+  font-size: 16px;
+  font-family: "Ubuntu Mono", serif;
+  font-weight: 400;
+  padding: 8px;
+  border: 2px solid black;
+  border-radius: 5px;
+  outline: none;
+  width: 100%;
+  max-width: 300px;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+input[type="number"]:focus {
+  border-color: rgb(57, 57, 232);
+  box-shadow: 0 0 8px rgba(57, 57, 232, 0.5);
+}
+
+input[type="number"]::placeholder {
+  color: rgb(77, 54, 43);
+  opacity: 0.8;
+}
+
+input[type="number"]:hover {
+  border-color: rgb(77, 54, 43);
 }
