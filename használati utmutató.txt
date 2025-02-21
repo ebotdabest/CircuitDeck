@@ -1,0 +1,50 @@
+Ez a dokumentum a Külföldi Kolonizálok közössége által létrehozott alkalmazás használatát írja le.
+
+1.Új számítógép létrehozása:
+	a, Jobb oldalt lévő menü savból kiválasztjuk a create pc gombot és bal egérgombbal rányomunk.
+	b, Ezekután a megjelenő menüben kitöltjük a kért adatokat tetszőlegesen majd rányomunk bal egérgombbal a create gombra a felugró menün.
+
+2.Új alkalmazás indítása:
+	a, Jobb oldalt lévő menü sávot kinyitjuk a bal alsó sarkában található nyíl segítségével.
+	b, Kiválasztjuk az alkalmazást amit indítani szeretnénk és bal egérgombbal rányomunk.
+
+3.Alkalmazások,Számítógépek mozgatása:
+	a, Kiválasztjuk a mozgatni kívánt alkalmazást/számítógépet.
+	b, Bal egérgombbal rányomunk és nyomva tartjuk majd elkezdjük mozgatni az egeret a kívánt pozícióba.
+	c, Ha elértük a kívánt pozíciót felengedjük a bal egérgombot.
+	d, Ha mégsem akarunk új számítógépet létrehozni újra megnyomjuk a jobb oldalt található create pc gombot.
+
+4.Alkalmazás számítógéphez rendelése:
+	a, Megfogjuk a kívánt alkalmazást és belehúzzuk a kívánt számítógépbe az eddig leírtak segítségével.
+
+5.Alkalmazás eltávolítása egy számítógépből:
+	a, Kiválasztjuk a kívánt alkalmazást és bal egér gombbal rányomunk.
+
+6.Alkalmazás leállítása/adatainak módosítása:
+	a, Ahhoz, hogy alkalmazást szerkesszünk vagy leállítsunk hozzá kell legyen rendelve egy számítógéphez.
+	b, Ha ezt megtettük, az alkalmazás jobb alsó sarkában lévő "x"-re kattintva bal egér gombbal leállíthatjuk/újraindíthatjuk az alkalmazást.
+	c, Az "x" felett található fogaskerekekre kattintva módosítani tudjuk az adott alkalmazás processzor illetve memória használatát is.
+	d, Ha ezzel meg vagyunk csak nyomjunk rá a zöld "confirm" gombra.
+	e, Ha mégsem szeretnénk módosítani az adatokat csak nyomjunk a piros "cancel" gomra.
+
+7.Alkalmazás végleges törlése:
+	a, Egy alkalmazás törléséhez nem szabad hogy hozzá legyen rendelve akármejik számítógéphez.
+	b, Ha ezzel megvagyunk csak húzzuk az alkalmazást a bal alsó sarokban található kuka keretén belülre és pár másodperc elteltével törlődni is fog.
+	c, Ha út közben meggondoljuk magunkat van pár másodpercünk mielőtt törlődik az alkalmazás ezen idő belül csak húzzuk ki a kuka keretén belülről az alkalmazást.
+
+8.Számítógép végleges törlése:
+	a, Ahhoz, hogy egy számítógépet törölhessünk nem szabad hogy hozzá legyen rendelve alkalmazás vagy alkalmazások.
+	b, Ha már nem tartalmaz Alkalmazásokat csak belehúzzuk a kukába és pár másodperc elteltével törlődni is fog.
+	c, Ha út közben meggondoljuk magunkat van pár másodpercünk mielőtt törlődik a számítógép ezen idő belül csak húzzuk ki a kuka keretén belülről az alkalmazást.
+	
+9.Egy alkalmazás összes futó példányának törlése:
+	a, Jobb oldalt lévő menü sávot kinyitjuk a bal alsó sarkában található nyíl segítségével.
+	b, kiválasztjuk a kívánt alkalmazást és a bal alsó sarkában lévő "x"-re.
+	c, Ha biztos törölni akarjuk az alkalmazás összes futó példányát nyomjunk a "yes"-re.
+	d, Ha mégsem akarjuk csak nyomjunk a "No"-gombra.
+
+10. Egy alkalmazásból futtatni kívánt darabszám és az alkalmazás alapértelmezett fogyasztásának átállítása:
+	a, Jobb oldalt lévő menü savból kiválasztjuk a "Manage Cluster"- opciót és rányomunk.
+	b, A felugró menüből kiválasztjuk a módosítani kívánt alkalmazást.
+	c, Ha a futtatandó számot akarjuk módosítani a bal oldalon lévő "Change Run Count"-ra nyomunk és beírjuk a kívánt összeget.jk 
+	d, Ha az alapértelmezett fogyasztást akarjuk módosítani a jobb oldali "Change allocation"-gombra kell kattintanunk és beírjuk a kívánt mennyiségeket.
