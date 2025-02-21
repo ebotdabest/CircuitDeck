@@ -269,17 +269,17 @@ class Computer:
             send_to_client(e)
 
 
-def load_root_config():
+def load_root_config(do_resolve = True):
     path = os.path.join(BASEDIR, ".klaszter")
 
     with open(path) as f:
         data = f.read().strip().split("\n")
         parsed: List[list] = []
-        for i, skibidi in enumerate(data):
+        for i, d in enumerate(data):
             proc_index = int(i / 4)
             if proc_index > len(parsed) - 1: parsed.append([])
 
-            parsed[proc_index].append(skibidi)
+            parsed[proc_index].append(d)
 
         for obj in parsed:
             name = obj[0]
@@ -320,17 +320,17 @@ def load_root_config():
                             needToRun[t.name] -= 1
                             continue
 
+        if not do_resolve: return
         for t in ProcessAbstract.TEMPLATES:
             while needToRun[t.name] >= 1:
                 spread_computers()
 
-def swap_env(folder_name):
-    global path_name
+def refresh_env():
     Computer.COMPUTERS.clear()
     ProcessAbstract.RUN_REQUIREMENTS.clear()
     ProcessAbstract.TEMPLATES.clear()
+    Computer.refresh_issues()
 
-    path_name = folder_name
     refresh_path_dir()
 
 # [[ HTTP SECTION ]]
@@ -353,24 +353,25 @@ def position(args):
 
 @http_route("/api/refresh_computers")
 def rc(args):
-    for c in Computer.COMPUTERS:
-        send_to_client(json.dumps({"type": "addComputer", "name": c.name,
-                                   "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
+    if "proconly" not in args:
+        for c in Computer.COMPUTERS:
+            send_to_client(json.dumps({"type": "addComputer", "name": c.name,
+                                       "proc": c.max_proc, "mem": c.max_mem, "uproc": c.proc, "umem": c.mem}))
 
-        for p in c.processes:
-            send_to_client(json.dumps({
-                "type": "existingProcess",
-                "cname": c.name,
-                "name": p.abstract.name,
-                "pid": p.process_id,
-                "mem": p.using_mem,
-                "proc": p.using_proc,
-                "status": p.status == "AKTÍV"
-            }))
+            for p in c.processes:
+                send_to_client(json.dumps({
+                    "type": "existingProcess",
+                    "cname": c.name,
+                    "name": p.abstract.name,
+                    "pid": p.process_id,
+                    "mem": p.using_mem,
+                    "proc": p.using_proc,
+                    "status": p.status == "AKTÍV"
+                }))
     if "pconly" not in args:
         for t in ProcessAbstract.TEMPLATES:
             send_to_client(json.dumps({"type": "registerProcess", "name": t.name, "proc": t.required_processor,
-                                       "mem": t.required_memory}))
+                                       "mem": t.required_memory, "rc": t.run_count}))
 
     Computer.refresh_issues()
 
@@ -536,6 +537,50 @@ def allocate_resources(args):
         "mem": computer.max_mem
     })
 
+
+@http_route("/api/change_cluster_alloc")
+def change_cluster_alloc(args):
+    import copy
+    with open(os.path.join(BASEDIR, ".klaszter")) as f:
+        content = f.read().split("\n")
+
+    clone = copy.deepcopy(content)
+    for i, c in enumerate(content):
+        if c == args["appName"]:
+            proc, mem = args["proc"], args["mem"]
+
+            clone[i+2] = proc
+            clone[i+3] = mem
+            break
+
+    with open(os.path.join(BASEDIR, ".klaszter"), "w") as f:
+        f.write("\n".join(clone))
+
+    refresh_env()
+    load_root_config()
+
+    return json_response({"result": True})
+
+@http_route("/api/change_cluster_run")
+def change_cluster_count(args):
+    import copy
+    with open(os.path.join(BASEDIR, ".klaszter")) as f:
+        content = f.read().split("\n")
+
+    clone = copy.deepcopy(content)
+    for i, c in enumerate(content):
+        if c == args["appName"]:
+            clone[i + 1] = args["runCount"]
+            break
+
+    with open(os.path.join(BASEDIR, ".klaszter"), "w") as f:
+        f.write("\n".join(clone))
+
+    refresh_env()
+    load_root_config(False)
+
+    Computer.refresh_issues()
+    return json_response({"result": True})
 
 if __name__ == "__main__":
     load_root_config()

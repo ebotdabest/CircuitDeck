@@ -25,6 +25,7 @@
       import { createCardDiv } from "/scripts/scripts.js"
       import { createNodeDiv } from "/scripts/scripts.js"
       import { makeError } from "/scripts/scripts.js"
+      import { createClusterConfigCard } from '/scripts/scripts.js';
 
       document.body.addEventListener("serverOpen", () => {
         send_to_server("/api/refresh_computers", {}, () => {});
@@ -45,6 +46,8 @@
             clone2.setAttribute("indentifier", command.name)
             document.querySelectorAll(".items-app")[0].appendChild(clone2);
             clone2.classList.add("duplicateable-app");
+            
+            createClusterConfigCard(command.name, command.rc, command.proc, command.mem)
             break
           case "existingProcess":
             const ep = createNodeDiv(command)
@@ -74,7 +77,8 @@
       });
     </script>
 
-    <div id="workspaces-wrap">
+    <div id="workspaces-wrap" style="visibility: hidden; background-color: transparent; z-index: -500; position: absolute;" hidden>
+      <!-- A kormány rejti ezt a részét a rendszernek. 10.000 ft a feloldásért (btw nincs mit feloldani kedves István, puszi: Henrik és Gellért a Flaretől. Tali -8 nap múlva) -->
       <div id="workspace-create-ui">
         <h2>Create workspace</h2>
         <form id="workspace-form">
@@ -93,6 +97,17 @@
     <div class="container workspace-content" id="Base-workspace">
       
     </div>
+    <div class="cluster-popup" id="cluster-popup">
+      <div class="cluster-popup-content">
+        <button id="close-cluster-popup" class="popup-close">X</button>
+        <h2>Manage Cluster</h2>
+        <div id="cluster-settings">
+            
+        </div>
+      </div>
+    </div>
+
+    
     <div class="menu">
       <button id="menu-button">◀</button>
       <button id="button-pc" type="button">Create PC</button>
@@ -112,7 +127,7 @@
       <h2>Create PC</h2>
       <form id="pc-form">
         <p>Name</p>
-        <input type="text" name="pcname" id="pc-name" />
+        <input type="text" name="pcname" id="pc-name" pattern="([a-zA-Z1-9 ])+" />
         <p>Memory: <span id="memory-value">1</span></p>
         <input type="range" min="1" max="131072" id="memory-slider" />
         <p>Cores: <span id="cores-value">2</span></p>

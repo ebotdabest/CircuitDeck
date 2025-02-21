@@ -273,10 +273,9 @@ document.addEventListener("click", function (e) {
     const clone = original.cloneNode(true);
     clone.classList.remove("duplicateable-app");
     clone.classList.add("node");
-    clone.style.position = "absolute"
-    clone.style.zIndex = "15000";
-    clone.style.left = `${e.screenX / 2}px`;
-    clone.style.top = `${e.screenY / 2}px`;
+    clone.style.zIndex = "500";
+    clone.style.left = `${e.clientX - 150}px`;
+    clone.style.top = `${e.clientY - 75}px`;
     const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
     const activeWorkspaceContent = document.getElementById(
       activeWorkspaceContentId
@@ -661,6 +660,7 @@ export const handleSettingsBtn = (e) => {
   const settingsButton = e.target.closest("button.settings-btn");
   if (!settingsButton) return;
 
+  
   const parent = settingsButton.parentNode
 
   makeAllocateOverlay(parent.getAttribute("indentifier"), parent.getAttribute("proc"), 0, 0, (p, m) => {
@@ -931,6 +931,156 @@ function makeAllocateOverlay(type, id, mem, proc, callback) {
   document.body.appendChild(outline)
 }
 
+function makeRunCountOverlay(app, callback) {
+  const outline = document.createElement("div")
+  outline.classList.add("popup-overlay")
+
+  const box = document.createElement("div")
+  box.classList.add("popup-box")
+
+  const title = document.createElement("h1")
+  title.textContent = `Run count for ${app}`
+
+  const form = document.createElement("form")
+
+  const valueInput = document.createElement("input")
+  valueInput.type = "number"
+  valueInput.value = 0
+
+  const confirmBtn = document.createElement("input")
+  confirmBtn.type = "submit"
+  confirmBtn.classList.add("popup-button", "popup-button-yes")
+  confirmBtn.value = "Confirm"
+
+  const cancelBtn = document.createElement("button")
+  cancelBtn.classList.add("popup-button", "popup-button-no")
+  cancelBtn.textContent = "Cancel"
+
+  form.onsubmit = (e) => {
+    e.preventDefault()
+    callback(valueInput.value)
+    outline.remove()
+  }
+
+  cancelBtn.onclick = () => outline.remove()
+  
+  form.appendChild(valueInput)
+  form.appendChild(document.createElement("br"))
+  form.appendChild(confirmBtn)
+  form.appendChild(cancelBtn)
+  box.appendChild(title)
+  box.appendChild(form)
+  outline.appendChild(box)
+
+  document.body.appendChild(outline)
+}
+
 window.onbeforeunload = () => {
   return "Any and all processes out in the open will be removed following the reload!"
+}
+
+document.getElementById("cluster-pc").addEventListener("click", function () {
+  document.getElementById("cluster-popup").style.display = "block";
+});
+
+document.getElementById("close-cluster-popup").addEventListener("click", function () {
+  document.getElementById("cluster-popup").style.display = "none";
+});
+
+export function createClusterConfigCard(app, run_count, proc, mem) {
+  const card = document.createElement("div")
+  const h1 = document.createElement("h1")
+  const ul = document.createElement("ul")  
+  const rc = document.createElement("li")
+  const pu = document.createElement("li")
+  const mu = document.createElement("li")
+  const am = document.createElement("button")
+  const al = document.createElement("button")
+
+  am.classList.add("popup-button")
+  am.textContent = "Change run count"
+
+  al.classList.add("popup-button")
+  al.textContent = "Change allocation"
+  al.onclick = () => {
+    makeAllocateOverlay(app, app, 0,0, (p, m) => {
+      send_to_server("/api/change_cluster_alloc", {appName: app, proc: p, mem: m}, (data) => {
+        if (data.result) {
+          const itemsContent = document.querySelector(".items-app");
+          const children = [...itemsContent.children];
+        
+          for (let i = children.length - 1; i >= 0; i--) {
+            console.log(children[i])
+            children[i].remove();
+          }
+          
+          const clusterContent = document.querySelector("#cluster-settings");
+          const children2 = [...clusterContent.children];
+        
+          for (let i = children2.length - 1; i >= 0; i--) {
+            console.log(children2[i])
+            children2[i].remove();
+          }
+
+          setTimeout(() => {
+            send_to_server("/api/refresh_computers", {proconly: true}, () => {
+              console.log("Done")
+            })
+          }, 0)
+        }
+      })
+    })
+  }
+
+  am.onclick = () => {
+    makeRunCountOverlay(app, (v) => {
+      send_to_server("/api/change_cluster_run", {"appName": app, "runCount": v}, (data) => {
+        if (data.result) {
+          const itemsContent = document.querySelector(".items-app");
+          const children = [...itemsContent.children];
+        
+          for (let i = children.length - 1; i >= 0; i--) {
+            console.log(children[i])
+            children[i].remove();
+          }
+
+          const clusterContent = document.querySelector("#cluster-settings");
+          const children2 = [...clusterContent.children];
+        
+          for (let i = children2.length - 1; i >= 0; i--) {
+            console.log(children2[i])
+            children2[i].remove();
+          }
+
+          setTimeout(() => {
+            send_to_server("/api/refresh_computers", {proconly: true}, () => {
+              console.log("Done")
+            })
+          }, 0)
+        }
+      })
+    })
+  }
+  
+
+  h1.textContent = app
+  rc.innerHTML = `Normal run count: <prc>${run_count}</prc>`
+  pu.innerHTML = `Processor usage: <prc>${proc}</prc>`
+  mu.innerHTML = `Memory usage: <prc>${mem}</prc>`
+
+  card.classList.add("cluster-settings-card")
+  ul.appendChild(rc)
+  ul.appendChild(pu)
+  ul.appendChild(mu)
+
+  card.appendChild(h1)
+  card.appendChild(ul)
+  card.appendChild(am)
+  card.appendChild(al)
+
+  document.querySelector("#cluster-settings").appendChild(card)
+}
+
+export function createCustomProcessOverlay(callback) {
+  
 }
