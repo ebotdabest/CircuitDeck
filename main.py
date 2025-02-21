@@ -584,5 +584,5 @@ def change_cluster_count(args):
 
 if __name__ == "__main__":
     load_root_config()
-    # webbrowser.open("http://localhost:8080")
+    webbrowser.open("http://localhost:8080")
     start_server(ADDRESS, PORT)
