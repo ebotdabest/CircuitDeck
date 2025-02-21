@@ -472,6 +472,8 @@ function addToPC(card, app) {
           ).textContent = `Process ID: ${data.processId}`;
         }
         turnInsiderNode(clone);
+        clone.querySelector('[class="power"]').onclick = handleEvPower
+        clone.querySelector('[class="settings-btn"]').onclick = handleSettingsBtn
       } else {
         showAlert("Overuse warning", "This process cannot be ran on the computer.")
         console.warn("Server response did not confirm success:", data);
