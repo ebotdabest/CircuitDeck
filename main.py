@@ -1,5 +1,3 @@
-from Tools.i18n.msgfmt import usage
-
 from framework import start_server, http_route, render_webpage, json_response, send_to_client, do_img_render
 from typing import List, Optional
 import webbrowser, os, sys, string
@@ -17,6 +15,41 @@ def refresh_path_dir():
 
 # [[ FUNCTIONALITY SECTION ]]
 class ProcessAbstract:
+    """
+    Represents an abstract process template with specific resource requirements.
+
+    Attributes:
+        TEMPLATES (List[Optional["ProcessAbstract"]]): A list of registered process templates.
+        RUN_REQUIREMENTS (dict): A dictionary storing the required number of instances per process type.
+
+    Methods:
+        __init__(name, run_count, required_processor, required_memory):
+            Initializes a new process template with given parameters.
+
+        currently_active (property):
+            Gets or sets the number of currently active instances of this process.
+
+        name (property):
+            Returns the name of the process.
+
+        run_count (property):
+            Returns the required number of instances of this process.
+
+        required_processor (property):
+            Returns the required processor capacity for this process.
+
+        required_memory (property):
+            Returns the required memory capacity for this process.
+
+        add_process_template(proc):
+            Adds a new process template to the list.
+
+        get_process_template(name):
+            Retrieves a process template by name.
+
+        stop_all_with_this_type():
+            Stops all running instances of this process type across all computers.
+    """
     TEMPLATES: List[Optional["ProcessAbstract"]] = []
     RUN_REQUIREMENTS = {}
 
@@ -91,9 +124,76 @@ generate_process_id = lambda: "".join([r.choice(string.ascii_lowercase) for _ in
 
 
 class Computer:
+    """
+    Represents a computer with a given processing and memory capacity that can run processes.
+
+    Attributes:
+        COMPUTERS (List[Optional["Computer"]]): A list of all registered computers.
+
+    Methods:
+        __init__(name, processor, memory, processes):
+            Initializes a new computer with the given specifications.
+
+        path (property):
+            Returns the filesystem path for this computer's data storage.
+
+        refresh_resources():
+            Updates the available processor and memory resources.
+
+        add_process(process):
+            Adds a process to the computer and updates resource allocation.
+
+        end_process(process_index):
+            Ends a process by removing it from the system.
+
+        can_run(process):
+            Checks if the computer has enough resources to run a process.
+
+        can_execute(proc, mem, offset=(0,0)):
+            Determines if the computer can allocate the given processor and memory with an optional offset.
+
+        save():
+            Saves the computer's configuration to disk.
+
+        load_computer(name):
+            Loads a computer and its processes from the filesystem.
+
+        refresh_issues():
+            Updates the global process status logs for all computers.
+    """
+
     COMPUTERS: List[Optional["Computer"]] = []
 
     class Process:
+        """
+        Represents a running process instance on a computer.
+
+        Attributes:
+            created_at (str): The creation timestamp of the process.
+            process_id (str): A unique identifier for the process.
+            parent_name (str): The name of the computer running this process.
+            abstract (ProcessAbstract): The abstract template for this process.
+            status (str): The status of the process, either "AKTÍV" (active) or "INAKTÍV" (inactive).
+            using_mem (int): The memory used by the process.
+            using_proc (int): The processor usage of the process.
+
+        Methods:
+            save():
+                Saves the process state to the filesystem.
+
+            destroy():
+                Removes the process from the system.
+
+            reallocate(proc, mem):
+                Changes the resource allocation for the process.
+
+            swap_status():
+                Toggles the process status between active and inactive.
+
+            path (property):
+                Returns the filesystem path where the process data is stored.
+        """
+
         def __init__(self, abstract: ProcessAbstract, parent_name: str, process_id: str = None, original_data = False,
                      umem = -1, uproc = -1):
             self.created_at = dt.now().strftime("%d-%m-%Y %H:%M:%S")
@@ -270,6 +370,13 @@ class Computer:
 
 
 def load_root_config(do_resolve = True):
+    """
+    Loads the root cluster configuration, initializes processes, and assigns them to computers.
+
+    Args:
+        do_resolve (bool): Whether to attempt auto-resolution of process assignments.
+    """
+
     path = os.path.join(BASEDIR, ".klaszter")
 
     with open(path) as f:
@@ -347,9 +454,6 @@ def index(args):
 def ws_address(args):
     return json_response({"address": f"{ADDRESS}:{PORT}"})
 
-@http_route("/get_positions")
-def position(args):
-    return json_response({})
 
 @http_route("/api/refresh_computers")
 def rc(args):
