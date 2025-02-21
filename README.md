@@ -1,4 +1,4 @@
-# **CircuitDeck**  
+# **CircuitDeck** - We swear it's a python project
 **Simulate, Build, and Manage Virtualized PCs with Card-Based Computing**  
 
 Welcome to **CircuitDeck**, a project where you can simulate virtualized computers and their memory, processing power, and applications—all represented as interactive cards. Build your own computational systems, manage resources, and experiment with app integration in a modular, card-based environment.  
