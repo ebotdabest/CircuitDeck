@@ -20,7 +20,7 @@ class DragableCard {
   }
 
   startDragging(e) {
-    if (e.target.closest(".power")) return;
+    if (e.target.closest(".power") || e.target.closest(".settings-btn")) return;
     this.isDragging = true;
     this.card.style.zIndex = 1000;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -76,6 +76,8 @@ class DragableNode {
   }
 
   startDragging(e) {
+    if (e.target.closest(".power") || e.target.closest(".settings-btn")) return;
+
     try {
       this.isDragging = true;
       this.node.style.zIndex = 1000;
@@ -271,9 +273,10 @@ document.addEventListener("click", function (e) {
     const clone = original.cloneNode(true);
     clone.classList.remove("duplicateable-app");
     clone.classList.add("node");
-    clone.style.zIndex = "500";
-    clone.style.left = `${e.clientX - 150}px`;
-    clone.style.top = `${e.clientY - 75}px`;
+    clone.style.position = "absolute"
+    clone.style.zIndex = "15000";
+    clone.style.left = `${e.screenX / 2}px`;
+    clone.style.top = `${e.screenY / 2}px`;
     const activeWorkspaceContentId = activeWorkspaceId + "-workspace";
     const activeWorkspaceContent = document.getElementById(
       activeWorkspaceContentId
@@ -316,7 +319,7 @@ function startDeleteTimer(element) {
         if (data.result) {
           element.remove();
         } else {
-          alert(data.reason);
+          showAlert("Error!", data.reason)
         }
       });
     }, 1500);
@@ -429,61 +432,6 @@ function isOverlapping(rect1, rect2) {
   );
 }
 
-// function addToPC(card, app) {
-//   console.log("addToPC called with card:", card, "and app:", app);
-//   const clone = app.cloneNode(true);
-//   clone.classList.remove("node");
-//   clone.classList.add("node2", "inside");
-//   clone.style.outline = "";
-
-//   app.remove();
-//   const processHolder = card.querySelector("#process-holder");
-//   if (processHolder) {
-//     clone.id = "copy-process";
-//     processHolder.appendChild(clone);
-//     const cardNameElement = card.querySelector('[name="name"]');
-//     const cardName = cardNameElement
-//       ? cardNameElement.textContent
-//       : "Card Name Not Found";
-//     console.log(cardName);
-//     const appNameElement = clone.querySelector('[name="name"]');
-//     const appName = appNameElement
-//       ? appNameElement.textContent
-//       : "App Name Not Found";
-//     if (clone.hasAttribute("proc")) {
-//       send_to_server(
-//         "/api/add_process",
-//         {
-//           pcName: cardName,
-//           appType: appName,
-//           appId: clone.getAttribute("proc"),
-//           status: clone.classList.contains("inactive") ? "i" : "a",
-//         },
-//         (data) => {
-//           clone.setAttribute("parent", cardName);
-//         }
-//       );
-//     } else {
-//       send_to_server(
-//         "/api/add_to_computer",
-//         { pcName: cardName, appType: appName },
-//         (data) => {
-//           clone.setAttribute("proc", data.processId);
-//           clone.setAttribute("parent", cardName);
-//           clone.querySelector(
-//             '[name="proc-id"]'
-//           ).textContent = `Process ID: ${data.processId}`;
-//         }
-//       );
-//     }
-
-//     processHolder.querySelector('[class="power"]').onclick = handleEv;
-//     makeNode2();
-//   } else {
-//     console.error("No element with ID 'process-holder' found inside the card.");
-//   }
-// }
-
 function addToPC(card, app) {
   // console.log("addToPC called with card:", card, "and app:", app);
   const clone = app.cloneNode(true);
@@ -491,7 +439,6 @@ function addToPC(card, app) {
   clone.classList.add("node2", "inside");
   clone.style.outline = "";
 
-  app.remove();
   const processHolder = card.querySelector("#process-holder");
   if (processHolder) {
     clone.id = "copy-process";
@@ -507,6 +454,7 @@ function addToPC(card, app) {
 
     const onSuccess = (data) => {
       if (data.result) {
+        app.remove();
         processHolder.appendChild(clone);
         clone.setAttribute("parent", cardName);
         const parent = clone.parentNode.parentNode;
@@ -526,6 +474,7 @@ function addToPC(card, app) {
         }
         turnInsiderNode(clone);
       } else {
+        showAlert("Overuse warning", "This process cannot be ran on the computer.")
         console.warn("Server response did not confirm success:", data);
       }
     };
@@ -659,7 +608,9 @@ export function createCardDiv(data) {
 
 export const handleEvPower = (e) => {
   e.stopPropagation();
-  const powerButton = e.target;
+  const powerButton = e.target.closest("button.power");
+  if (!powerButton) return;
+  
   if (powerButton.parentNode.classList.contains("duplicateable-app")) {
     showConfirm("Are you sure?", "You want to kill all Instances?", (r) => {
       if (r) {
@@ -703,14 +654,37 @@ export const handleEvPower = (e) => {
   e.stopImmediatePropagation();
 };
 
+
 export const handleSettingsBtn = (e) => {
   e.stopPropagation()
 
-  const settingsButton = e.target;
+  const settingsButton = e.target.closest("button.settings-btn");
+  if (!settingsButton) return;
+
   const parent = settingsButton.parentNode
 
   makeAllocateOverlay(parent.getAttribute("indentifier"), parent.getAttribute("proc"), 0, 0, (p, m) => {
-    console.log(p, m)
+    send_to_server("/api/allocate", {newProc: p, newMem: m, pcName: parent.getAttribute("parent"), processId: parent.getAttribute("proc")}, (data) => {
+      console.log(data)
+      if (!data.result) {
+        showAlert("Allocation failed!", "The computer cannot run this!")
+        return;
+      }
+
+      if (data.action) {
+        parent.classList.add("inactive")
+        return;
+      }
+
+      parent.querySelector('[name="proc"]').textContent = "CPU used: " + p;
+      parent.querySelector('[name="mem"]').textContent = "Memory used: " + m;
+      parent.parentNode.parentNode.querySelector('[name="proc"]').innerHTML = `Processor: <prc>${data.uproc}</prc>/${
+        data.proc
+      } (${parseInt(data.proc) - parseInt(data.uproc)} used)`;
+      parent.parentNode.parentNode.querySelector('[name="mem"]').innerHTML = `Memory: <prc>${data.umem}</prc>/${data.mem} (${
+        parseInt(data.mem) - parseInt(data.umem)
+      } used)`;
+      })
   })
 }
 
@@ -744,12 +718,12 @@ export function createNodeDiv(data) {
 
   const powerButton = document.createElement("button");
   powerButton.classList.add("power");
-  powerButton.textContent = "❌";
+  powerButton.innerHTML = '<span class="material-symbols-outlined">power_settings_new</span>';
   powerButton.onclick = handleEvPower;
 
   const settingsButton = document.createElement("button")
   settingsButton.classList.add("settings-btn")
-  settingsButton.textContent = "⚙";  
+  settingsButton.innerHTML = '<span class="material-symbols-outlined">manufacturing</span>';  
   settingsButton.onclick = handleSettingsBtn
 
   processDiv.appendChild(imgElement);
@@ -919,11 +893,11 @@ function makeAllocateOverlay(type, id, mem, proc, callback) {
   p2.textContent = "Memory: "
   const procInput = document.createElement("input")
   procInput.type = "number"
-  procInput.value = proc
+  procInput.value = Number.parseInt(proc)
 
   const memInput = document.createElement("input")
   memInput.type = "number"
-  memInput.value = mem
+  memInput.value = Number.parseInt(mem)
 
   const confirmBtn = document.createElement("input")
   confirmBtn.type = "submit"
@@ -935,8 +909,10 @@ function makeAllocateOverlay(type, id, mem, proc, callback) {
   cancelBtn.textContent = "Cancel"
 
   form.onsubmit = (e) => {
+    console.log("magic cookie!")
     e.preventDefault()
     callback(procInput.value, memInput.value)
+    outline.remove()
   }
 
   cancelBtn.onclick = () => outline.remove()
@@ -953,4 +929,8 @@ function makeAllocateOverlay(type, id, mem, proc, callback) {
   outline.appendChild(box)
 
   document.body.appendChild(outline)
+}
+
+window.onbeforeunload = () => {
+  return "Any and all processes out in the open will be removed following the reload!"
 }

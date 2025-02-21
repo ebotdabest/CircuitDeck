@@ -10,6 +10,10 @@
       rel="stylesheet"
       href="{{ get_serverside_file('css', 'style.css') }}"
     />
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=power_settings_new" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=manufacturing" /> -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
   </head>
   <body>
     {{ add_signals() }}
@@ -70,7 +74,7 @@
       });
     </script>
 
-    <div id="workspaces-wrap" style="visibility: hidden;">
+    <div id="workspaces-wrap">
       <div id="workspace-create-ui">
         <h2>Create workspace</h2>
         <form id="workspace-form">
@@ -92,6 +96,7 @@
     <div class="menu">
       <button id="menu-button">◀</button>
       <button id="button-pc" type="button">Create PC</button>
+      <button id="cluster-pc" type="button">Manage Cluster</button>
       <div class="items-pc">
         
       </div>

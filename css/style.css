@@ -313,7 +313,8 @@ p,
   cursor: pointer;
 }
 
-#button-pc {
+#button-pc,
+#cluster-btn {
   display: flex;
   align-content: center;
   justify-content: center;
@@ -608,4 +609,10 @@ input[type="number"]::placeholder {
 
 input[type="number"]:hover {
   border-color: rgb(77, 54, 43);
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  background-color: transparent;
 }

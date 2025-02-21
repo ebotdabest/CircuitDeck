@@ -95,14 +95,14 @@ class Computer:
 
     class Process:
         def __init__(self, abstract: ProcessAbstract, parent_name: str, process_id: str = None, original_data = False,
-                     umem = 0, uproc = 0):
+                     umem = -1, uproc = -1):
             self.created_at = dt.now().strftime("%d-%m-%Y %H:%M:%S")
             self.process_id = generate_process_id() if not process_id else process_id
             self.parent_name = parent_name
             self.abstract = abstract
             self.status = "AKTÍV"
-            self.using_mem = umem
-            self.using_proc = uproc
+            self.using_mem = umem if umem != -1 else abstract.required_memory
+            self.using_proc = uproc if uproc != -1 else abstract.required_processor
             self.abstract.currently_active += 1
             if process_id and original_data:
                 pass
@@ -117,7 +117,7 @@ class Computer:
             with open(self.path, "w", encoding="utf-8") as f:
                 f.write(self.created_at + "\n")
                 f.write(self.status + "\n")
-                f.write(str(self.using_mem) + "\n")
+                f.write(str(self.using_proc) + "\n")
                 f.write(str(self.using_mem))
 
         def destroy(self):
@@ -130,6 +130,16 @@ class Computer:
             except FileNotFoundError:
                 # Race condition already won
                 pass
+
+        def reallocate(self, proc, mem):
+            self.using_proc = proc
+            self.using_mem = mem
+
+            for c in Computer.COMPUTERS:
+                if c.name == self.parent_name:
+                    c.refresh_resources()
+                    c.refresh_issues()
+
 
         def swap_status(self):
             if self.status == "AKTÍV":
@@ -161,8 +171,8 @@ class Computer:
         return os.path.join(BASEDIR, self.name)
 
     def refresh_resources(self):
-        self.proc = self.max_proc - sum(p.abstract.required_processor for p in self.processes)
-        self.mem = self.max_mem - sum(p.abstract.required_memory for p in self.processes)
+        self.proc = self.max_proc - sum(p.using_proc for p in self.processes)
+        self.mem = self.max_mem - sum(p.using_mem for p in self.processes)
 
     def add_process(self, process: Process):
         process.save()
@@ -173,10 +183,22 @@ class Computer:
         proc = self.processes[process_index]
         proc.destroy()
 
-    def can_run(self, process: ProcessAbstract):
-        if self.mem >= process.required_memory and self.proc >= process.required_processor: return True
+    def can_run(self, process: ProcessAbstract | Process):
+        if isinstance(process, ProcessAbstract):
+            if self.mem >= process.required_memory and self.proc >= process.required_processor: return True
+
+            return False
+        elif isinstance(process, Computer.Process):
+            if self.mem >= process.using_mem and self.proc >= process.using_proc: return True
+
+            return False
+
+    def can_execute(self, proc, mem, offset = (0,0)):
+        if self.mem - offset[0] >= mem and self.proc - offset[1] >= proc: return True
 
         return False
+
+
 
     def save(self):
         if not os.path.exists(self.path): os.mkdir(self.path)
@@ -200,11 +222,20 @@ class Computer:
                     template = ProcessAbstract.get_process_template(fn.split("-")[0])
                     with open(os.path.join(BASEDIR, name, fn)) as proc_file:
                         proc_data = proc_file.read().split("\n")
-                        # proc_data.
+                        creation_date = proc_data[0]
+                        status = proc_data[1]
+                        cpu = int(proc_data[2])
+                        mem = int(proc_data[3])
 
+                    p = Computer.Process(template, name, fn.split("-")[1], umem=mem,
+                                     uproc=cpu)
 
-                    processes.append(Computer.Process(template, name, fn.split("-")[1], umem=int(template.required_memory),
-                                                      uproc = int(template.required_processor)))
+                    if status == "INAKTÍV":
+                        p.swap_status()
+
+                    p.created_at = creation_date
+                    processes.append(p)
+                    p.save()
 
 
                 return Computer(name, processor, memory, processes)
@@ -332,8 +363,8 @@ def rc(args):
                 "cname": c.name,
                 "name": p.abstract.name,
                 "pid": p.process_id,
-                "mem": p.abstract.required_memory,
-                "proc": p.abstract.required_processor,
+                "mem": p.using_mem,
+                "proc": p.using_proc,
                 "status": p.status == "AKTÍV"
             }))
     if "pconly" not in args:
@@ -469,7 +500,42 @@ def kill_all(args):
 
 @http_route("/api/allocate")
 def allocate_resources(args):
-    ...
+    newProc = int(args["newProc"])
+    newMem = int(args["newMem"])
+
+    computer: Computer = [c for c in Computer.COMPUTERS if c.name == args["pcName"]][0]
+    if not computer.can_execute(newProc, newMem):
+        return json_response({
+            "result": False
+        })
+
+
+    for p in computer.processes:
+        if p.process_id == args["processId"]:
+            if newProc == 0 or newMem == 0:
+                if p.status == "AKTÍV":
+                    p.swap_status()
+                    p.save()
+
+                Computer.refresh_issues()
+
+                return json_response({
+                    "result": True,
+                    "action": "swap"
+                })
+            p.reallocate(newProc, newMem)
+            p.save()
+            break
+
+
+    return json_response({
+        "result": True,
+        "uproc": computer.proc,
+        "proc": computer.max_proc,
+        "umem": computer.mem,
+        "mem": computer.max_mem
+    })
+
 
 if __name__ == "__main__":
     load_root_config()
